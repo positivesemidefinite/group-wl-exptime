@@ -1,0 +1,1896 @@
+% Compile with pdflatex twice, or run tectonic group_wl.tex.
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{microtype}
+\usepackage{enumitem,booktabs}
+\usepackage{xcolor}
+\definecolor{linkink}{HTML}{193F60}
+\usepackage[colorlinks=true,linkcolor=linkink,citecolor=linkink,urlcolor=linkink]{hyperref}
+\hypersetup{pdftitle={EXPTIME-completeness of group Weisfeiler--Leman identification and equivalence},pdfsubject={EXPTIME-completeness with an explicit dense reduction}}
+\newcommand{\F}{\mathbb F_p}
+\newcommand{\eps}{\varepsilon}
+\DeclareMathOperator{\Hom}{Hom}
+\DeclareMathOperator{\Alt}{Alt}
+\DeclareMathOperator{\im}{im}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\rad}{rad}
+\DeclareMathOperator{\spanop}{span}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\numberwithin{equation}{section}
+\setlist{topsep=4pt,itemsep=2pt,parsep=0pt}
+\setlength{\parskip}{2pt}
+\emergencystretch=2em
+\title{EXPTIME-completeness of group Weisfeiler--Leman\\
+identification and equivalence}
+\author{}
+\date{}
+\begin{document}
+\maketitle
+\vspace{-2em}
+\begin{abstract}
+Fix an odd prime $p$. A dense alternating tensor over $\mathbb F_p$ describes a
+finite group whose order can be exponential in the length of its description.
+Given the tensor and a dimension $k$, deciding whether $k$-dimensional
+Weisfeiler--Leman refinement identifies this group among all finite groups
+is EXPTIME-complete. Deciding equivalence of two tensor-described groups is
+also EXPTIME-complete. Both statements hold for all three versions of group
+refinement and for binary and unary $k$. The identification reduction outputs
+groups of class two and exponent $p$ with center equal to their derived
+subgroup. The equivalence reduction outputs nonisomorphic pairs on every
+input. The proof encodes a bounded machine computation as an affine system.
+Solvability determines whether a twist of a group bracket can be removed,
+and local solutions give Duplicator's strategy below a prescribed dimension.
+\end{abstract}
+
+\section{The problems and the main theorem}
+\label{sec:statement}
+Fix an odd prime $p$ and write $\F=\mathbb F_p$.
+For $V=\F^d$ and $W=\F^s$, an alternating bilinear map $b:V\times V\to W$
+defines a group $G_b$ on $V\oplus W$ by
+\begin{equation}
+ (v,z)(v',z')=(v+v',z+z'+\tfrac12 b(v,v')).
+ \label{eq:tensor-group}
+\end{equation}
+Bilinearity gives associativity. The identity is $(0,0)$, the inverse of
+$(v,z)$ is $(-v,-z)$, and the commutator $ghg^{-1}h^{-1}$ of elements
+with first coordinates $v,v'$ is $(0,b(v,v'))$. In particular
+$|G_b|=p^{d+s}$. We use $\Alt(V,W)$ for the space of such maps.
+
+A tensor description consists of $d,s$ followed by all $d^2s$
+coefficients $b(e_i,e_j)_\ell$ in standard basis order. Each dimension
+and each coefficient is written as $1^a0$, with coefficients represented
+by integers $0\le a<p$. A valid array has zero diagonal and is
+skew-symmetric. In the identification problem one tensor is followed by
+$k\ge1$. In the equivalence problem two consecutive tensors are followed
+by $k$. The suffix for $k$ is either its binary expansion beginning in
+$1$, or the string $1^k$, according to the problem under consideration.
+Malformed strings are rejected. In particular the input length charges
+both dimensions even when $b=0$. The bases are used only for describing
+the input. The groups given to refinement have no distinguished elements.
+
+\paragraph{Colors and equivalence.}
+For a $k$-tuple $\bar a$ in a finite set $S$, write
+$\bar a[i\leftarrow x]$ for replacement of coordinate $i$ by $x$.
+Starting from a color $c_0$, use the joint replacement rule
+\[
+ c_{t+1}(\bar a)=\left(c_t(\bar a), \left\{\!\!\left\{
+ \big(c_t(\bar a[i\leftarrow x])\big)_{i=1}^k : x\in S
+ \right\}\!\!\right\}\right),
+\]
+where double braces denote a multiset. The same $x$ is used in all
+coordinates of a replacement vector. Colors are compared with common
+names across the two structures.
+
+In Version I, $S=G$ and $c_0$ records all equalities $a_i=a_j$ and
+products $a_i a_j=a_\ell$. In Version II, $S=G$ and $c_0$ records the
+group words $w$ for which $w(\bar a)=1$. Equality of Version-II initial
+colors means that the marked subgroups are isomorphic under $a_i\mapsto
+a_i'$, since they are quotients of the same free group by the same kernel.
+In these versions the displayed rule applies also at $k=1$.
+
+In Version III, form the uncolored simple graph $\Gamma(G)$ with one
+vertex per group element and a fresh path $u_0u_1u_2u_3$ for each
+ordered pair $(g,h)$. Join $u_0$ to $g$, $u_1$ to $h$, and $u_3$ to
+$gh$. For $k\ge2$ apply the displayed rule with $S=V(\Gamma(G))$
+and initial color recording equalities and adjacencies. For $k=1$ start
+with the constant vertex color and refine by the old color together with
+the multiset of neighbor colors. In both cases collect the final
+histogram only on tuples of group vertices. These are the three group
+versions of Brachter and Schweitzer~\cite{BS2020}, with the preceding
+conventions fixing dimension one.
+
+Write $G\equiv_k^J H$ if the multisets of colors of tuples in $G^k$ and
+$H^k$ agree at every round in Version $J$. This can equivalently be
+tested when the common partition stabilizes, since each update retains
+the old color and the sets of tuples are finite. We say that $k$-WL
+\emph{identifies} $G$ if
+\begin{equation}
+ \text{for every finite group }H,\qquad
+ G\equiv_k^J H\quad\Longrightarrow\quad G\cong H .
+ \label{eq:identifies}
+\end{equation}
+In particular, comparison groups in this definition may have no tensor
+presentation of the input form.
+
+\begin{theorem}\label{thm:main}
+For every fixed odd prime $p$, every $J\in\{\mathrm I,\mathrm{II},\mathrm{III}\}$
+and either encoding of $k$, the following two languages are EXPTIME-complete
+under deterministic polynomial-time many-one reductions.
+\begin{enumerate}[label=\textup{(\roman*)}]
+\item The identification language consists of the inputs $(b,k)$ such
+that $k$-WL identifies $G_b$ among all finite groups. Hardness holds
+with every reduction output describing a group of nilpotency class
+exactly two and exponent $p$ with $Z(G_b)=G_b'$.
+\item The equivalence language consists of the inputs $(b,b',k)$ with
+$G_b\equiv_k^J G_{b'}$. Every language in EXPTIME reduces to it with
+$G_b\not\cong G_{b'}$ on every output, including yes-instances.
+\end{enumerate}
+\end{theorem}
+Here EXPTIME consists of languages decided in time $2^{c(n+1)^e}$ for some constants $c,e$, where $n$ is the input length. A reduction writes the full target
+word in polynomial time. Both definitions can use deterministic one-tape
+machines with fixed finite alphabets. The proposition
+\texttt{GroupWL.Statement.ManuscriptClaim} is the formal statement of
+Theorem~\ref{thm:main}.
+
+\begin{corollary}[Unbounded WL dimension]\label{cor:unbounded}
+For every fixed odd prime $p$ and every $k\ge1$, there is one pair of
+nonisomorphic finite groups $G,H$ of class two and exponent $p$ with
+$Z(G)=G'$ and $Z(H)=H'$ such that $G\equiv_k^J H$ simultaneously for
+all three versions.
+\end{corollary}
+
+\paragraph{Proof outline.}
+An addressed circuit describes an exponentially long computation with
+polynomially many connection rules (Appendix~\ref{app:compiler}).
+Section~\ref{hs:section} converts these rules into an affine system
+$Az=\beta$. It has a fixed inconsistent right-hand side that is locally
+solvable whenever the circuit rejects. Sections~\ref{hyb:algebra}
+and~\ref{hyb:residuals} turn this obstruction into a nonisomorphic pair
+and convert its local solutions into winning bijections on whole groups.
+On an accepting computation we must rule out \emph{every} nonisomorphic
+comparison group. Four pebbled group elements recover its vector spaces
+and its evaluation map up to a single alternating twist
+(Section~\ref{hyb:recognition}). Decoding the twist yields a solvable
+right-hand side, and hence an isomorphism (Section~\ref{sec:reduction}).
+Section~\ref{hu:section} gives the decision algorithms.
+
+\section{The affine computation source}
+\label{hs:section}
+
+Let $C$ be the circuit constructed in Lemma~\ref{lem:machine-schemas}
+of Appendix~\ref{app:compiler}. Its addressed layout follows~\cite{OpenAI2026}.
+Its gates are indexed by a finite type
+and an address in $\{0,1\}^r$, with $r\ge32$ polynomial in the input
+length. A connection is specified by its endpoint types, its target
+port, a product domain and a coordinatewise injective bit map on that
+domain. Seeds and tests also have product domains. A scalar gate takes
+the OR of its seeds and incoming signals. A two-port AND gate takes
+the conjunction of the ORs on its two ports. The circuit is acyclic
+and accepts if any tested gate is true. For the fixed source machine
+there are $O(1)$ gate types and $O(r^2)$ schemas. The affine system below will be listed from these schemas.
+
+\paragraph{Comparisons and blocks.}
+A scalar gate has one coordinate. An AND gate has two coordinate input
+forms and their sum as output.  Add a scalar broadcast type \(\mathsf{Bcast}\) and
+a dummy with zero form.  Compare each seed with the dummy's zero form.
+Besides circuit connections, add connections from tests to \(\mathsf{Bcast}\), from
+\(\mathsf{Bcast}\) to itself flipping each address bit, from \(\mathsf{Bcast}\) to every gate
+coordinate, and identity self-connections on every gate coordinate and
+on \(\mathsf{Bcast}\), with two copies for \(\mathsf{Bcast}\).
+Replace every directed connection \(o\to s\) by a private two-coordinate
+buffer and the three comparisons
+\begin{equation}
+ o-z_1=b_1,\qquad o-z_2=b_2,\qquad z_1+z_2-s=b_3.
+ \label{hs:buffer}
+\end{equation}
+The first two keep the source address. The third uses the connection's
+address map.  All three use its product domain, outside which the
+buffer is unused.
+Write \(d_P\in\{1,2\}\) for each real type's dimension and
+\(\lambda_{e,0},\lambda_{e,1}\) for a comparison's endpoint forms.
+
+Put \(K=r+1\).  Subdivide each comparison \(e:P\to Q\) into a wire
+of \(4K+1\) links with private scalar internal types.
+Write \(A_{t,i}=D_{e,i}\) when \(t\) is internal to wire \(e\), and
+\(A_{t,i}=\{0,1\}\) when \(t\) is real.
+The label matches \(M_{\ell,i}\) on a link of wire \(e\) are
+\(\{(a,a):a\in D_{e,i}\}\), except on the last link, where they are
+\(\{(a,\sigma_{e,i}(a)):a\in D_{e,i}\}\).
+Link endpoint forms \(L_{\ell,t},L_{\ell,u}\) are
+identity forms internally and the prescribed comparison forms at real
+endpoints.  Parallel schemas and self-schemas are allowed.
+
+The corners are \((t,i,a)\), with \(a\in A_{t,i}\).
+For \(a\in A_{t,i}\), \(b\in A_{t,i+1}\), the horizontal readout
+\(x_{i,t,a,b}\in\F^{d_t}\) is the edge
+\((t,i,a)\to(t,i+1,b)\).
+For \(\ell:t\to u\) and \((a,c)\in M_{\ell,i}\), the vertical readout
+\(y_{i,\ell,a,c}\in\F\) is the edge
+\((t,i,a)\to(u,i,c)\).
+There is a site block \(0=\beta_B\) owning each horizontal readout.
+For consecutive matches \((a,c)\in M_{\ell,i}\) and
+\((b,d)\in M_{\ell,i+1}\), make the square equation
+\begin{equation}
+ L_{\ell,t}x_{i,t,a,b}-L_{\ell,u}x_{i,u,c,d}
+       +y_{i+1,\ell,b,d}-y_{i,\ell,a,c}=\beta_B.
+ \label{hs:square}
+\end{equation}
+Rows are indexed by $i=1,\ldots,r$ cyclically. We suppress label subscripts when the selected square determines them.
+A square uses at most four readouts and five
+scalar coordinates, since at least one endpoint is internal.
+There are \(O(r^4)\) blocks, readouts, and incidences.
+Together these equations form \(Az=\beta\). Site scopes are retained
+even though their coefficient is zero. Every horizontal readout occurs at its site.
+Every vertical readout belongs to a square because its label on the link extends
+to an allowed label on the next row since each coordinate domain is
+nonempty.
+
+For a set \(S\) of blocks let \(J(S)\) be its readouts.
+An \emph{exact local family through \(K\) blocks} consists of nonempty
+sets \(\mathcal H_S\) of assignments on \(J(S)\) satisfying the equations
+in \(S\), for \(|S|\leq K\), with
+\(\mathcal H_T|_{J(S)}=\mathcal H_S\) whenever \(S\subseteq T\).
+Let \(B(i,\ell,a)\) be the square selected by a full wire address
+\(a\in D_e\), transmitted by \(\sigma_e\) at its last endpoint.  Define
+\[
+ \Delta_\ell(a)=\sum_i\beta_{B(i,\ell,a)},\qquad
+ \Delta_e(a)=\sum_{\ell\text{ on }e}\Delta_\ell(a).
+\]
+Each is a \emph{row sum}, meaning a sum of functions of
+\((a_i,a_{i+1})\).  The scalar-image conditions are
+\begin{equation}
+ \lambda_{e,0}(Q_{P,a})
+ =\Delta_e(a)+\lambda_{e,1}(Q_{Q,\sigma_e(a)}),
+ \qquad \varnothing\neq Q_{P,a}\subseteq\F^{d_P}.
+ \label{hs:images}
+\end{equation}
+For each comparison this is equality of two sets of scalars. Different comparisons may use different vectors in the same set $Q_{P,a}$.
+
+\begin{lemma}[Affine source]
+\label{hs:source}
+The construction has the following properties.
+\begin{enumerate}
+\item On an accepting input, every \(\beta\) that vanishes at sites
+and admits the sets \eqref{hs:images} belongs to \(\operatorname{im}A\).
+\item One explicitly computable shift \(\beta^*\) is outside
+\(\operatorname{im}A\) on every input.  On a rejecting input it has
+an exact local family through \(K=r+1\) blocks.
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+We prove the three ingredients, including the signed extension
+argument needed in odd characteristic.
+
+\paragraph{Global lifting.}
+A global solution yields row-sum functions
+\(h_t(a)=\sum_i x_{i,t,a_i,a_{i+1}}\), and summing squares around rows
+and along wires gives
+\begin{equation}
+ \lambda_{e,0}h_P(a)-\lambda_{e,1}h_Q(\sigma_e(a))=\Delta_e(a).
+ \label{hs:global}
+\end{equation}
+Conversely, suppose row-sum functions at real types satisfy
+\eqref{hs:global}.  At an internal type \(s\) on wire \(e\), set
+\(h_s=\lambda_{e,0}h_P-\sum_{\ell\leq s}\Delta_\ell\).
+Choose row decompositions once per type and assign their terms to the
+horizontal readouts.  On each link put $g_i=\beta_{B(i,\ell,a)}-L_{\ell,t}x_i+
+L_{\ell,u}x'_i$, using the two assigned horizontal readouts of the
+selected square. By the link equation for $h_t,h_u$, these residuals
+sum to zero at every product address.
+They have the form \(g_i(u,v)=Y_{i+1}(v)-Y_i(u)\):
+take rectangular differences in neighboring coordinates. Since $r\ge3$, only the term $g_i$ involves both of them, so its mixed difference is zero. Subtracting its values at a fixed base pair gives
+\(g_i=c_i+\alpha_i(u)+\gamma_i(v)\), with both one-variable terms normalized to vanish at the base labels. Varying coordinate \(i\) then gives
+\(\gamma_{i-1}=-\alpha_i\), and \(\sum_i c_i=0\).
+Choose \(C_{i+1}-C_i=c_i\) cyclically and put \(Y_i=-\alpha_i+C_i\).
+These \(Y_i\) give the vertical readouts.
+Matches are indexed bijectively by source-domain labels, so the
+assignment satisfies every square.  Thus \eqref{hs:global} with
+row-sum functions is also sufficient for a global solution.
+
+\paragraph{Acceptance.}
+In \eqref{hs:buffer}, a singleton source image forces both buffer
+coordinates, hence the buffer and destination image, to be singletons.
+At a seeded address the comparison with the dummy's zero form has a
+singleton image on the dummy side, so it fixes the seed's scalar image.  Induction through the acyclic circuit
+makes every true output singleton. A true AND has both coordinates
+singleton.  An accepting test therefore makes one broadcast address
+singleton.  Bit flips connect the address cube, and broadcasting then
+makes the gate and broadcast sets singletons, say \(\{h_P(a)\}\).
+For an identity self-connection on a coordinate \(h\), write \(\Delta_1,\Delta_2,\Delta_3\) for the row sums on its three comparison wires. Their equations give
+\[
+ z_1=h-\Delta_1,\quad z_2=h-\Delta_2,\quad
+ h=\Delta_1+\Delta_2+\Delta_3.
+\]
+The last identity uses \(2h-h=h\), not characteristic two.
+Consequently all gate and broadcast coordinates are row sums.
+Each buffer coordinate is \(o(h_P)-\Delta_j\) on its product domain.
+Extend its row terms arbitrarily outside that domain.
+Give the dummy value zero.  These row-sum functions satisfy
+\eqref{hs:global}, so global lifting proves the first assertion.
+
+\paragraph{The rejecting image sets.}
+Set all comparison constants \(b_e\) to zero except the third
+comparison of one broadcast self-connection, which receives one.
+On each wire put \(b_\ell=b_e\) on its last link and zero elsewhere,
+and set
+\begin{equation}
+ \beta^*_B=\delta_i b_\ell,\qquad
+ \delta_r=1,\quad \delta_i=0\ (i<r),
+ \label{hs:seam}
+\end{equation}
+with zero site shifts.  The two broadcast self-connections force
+\(h_{\mathsf{Bcast}}=0\) and \(h_{\mathsf{Bcast}}=1\) in any global solution, on every input.
+
+On rejection give a scalar gate \(\{0\}\) if true and \(\F\) otherwise.
+At an AND gate use the product of \(\{0\}\) or \(\F\) according to
+its port truths. Its output image is \(\{0\}\) exactly when both are
+true.  Give \(\mathsf{Bcast}\) and the dummy the full set.
+A singleton source of an unshifted connection has singleton-zero
+destination, so use buffer \(\{(0,0)\}\).
+For a full source and nonempty destination image \(T\), use
+\(\{(u,v):u+v\in b_3+T\}\).
+Both coordinate images are full and its sum image is \(b_3+T\).
+Outside a buffer's active domain choose any nonempty set.
+Thus \eqref{hs:images} holds with \(\Delta_e=b_e\).
+
+\paragraph{Exact local projection.}
+For a set $S$ of at most $K=r+1$ blocks, form the graph on corners using
+the horizontal and vertical readouts of $S$ as edges.
+A site contributes one edge and a square contributes its four boundary
+edges. Each block thus has connected support. A link is active if some
+square in $S$ uses it. On each wire choose one inactive link as a cut.
+This is possible since a wire has $4K+1$ links and $S$ activates at
+most $K$. Removing those links attaches every internal type to one of
+the two real endpoints of its wire. Call that endpoint its root. For
+a corner on the target arm of wire $e$ align its bit label at coordinate
+$i$ by $\sigma_{e,i}$, and on the source arm use the original label.
+At a real type use the original label. Along an active vertical edge
+the root and aligned bit agree at both ends.
+For a horizontal readout the root is constant and its two aligned
+labels lie in consecutive rows. The two horizontal sides of a square
+have the same pair of aligned labels.
+
+Put marker $\delta_i$ on a forward horizontal edge in row $i$, its
+negative on a backward traversal, and zero on a vertical edge. A
+component wraps if a closed walk has nonzero marker sum in $\F$.
+For such a walk let $f_i$ be its signed number of horizontal traversals
+from row $i$ to row $i+1$ in $\F$. Flow conservation on row $i$ gives
+$f_i=f_{i-1}$, so every $f_i$ equals the nonzero marker sum.
+Thus a wrapping subcollection uses at least one block in every row.
+If a wrapping set $R$ has $r$ blocks, there is exactly one in each row,
+and the walk meets a horizontal edge of each. Connectedness of block
+supports then puts every used corner in the wrapping component. In each
+row only one ordered pair of aligned labels is available for horizontal
+traversals. Applying flow conservation at each aligned label separately
+shows that the ending label in row $i-1$ equals the starting label in
+row $i$, since distinct labels would give nonzero net flow at one of them. Active vertical
+edges preserve that label. Hence all used corners have a common root
+$P$ and their aligned labels equal $a_i$ for a single address $a$.
+If two wrapping $r$-subsets of $S$ exist they differ in at most one
+block each. Their common blocks cover all but at most one row. These
+cyclic adjacent pairs determine every bit, so both subsets specify the
+same $(P,a)$ for the chosen cuts.
+
+Choose one vector $h_P$ at each real type. If a wrapping $r$-subset of
+$S$ specifies $(P,a)$, impose $h_P\in Q_{P,a}$. Such a choice exists
+by nonemptiness and the preceding uniqueness. For each internal type
+of wire $e:P\to Q$ use shift $h_t=\lambda_{e,0}(h_P)$ on the source
+arm and $h_t=b_e+\lambda_{e,1}(h_Q)$ on the target arm. Thus on every
+active link $\ell:t\to u$,
+$L_{\ell,t}h_t-L_{\ell,u}h_u=b_\ell$.
+At each corner $v$ choose a potential $M_v$ in its type space.
+On the oriented edges put
+\begin{equation}
+ x_{vw}=M_v-M_w+\delta_i h_t,\qquad
+ y_{vw}=L_{\ell,t}M_v-L_{\ell,u}M_w .
+ \label{hs:potentials}
+\end{equation}
+Let $\mathcal H_S$ consist of the assignments on $J(S)$ so obtained,
+allowing every admissible choice of cuts, shifts and potentials.
+Substitution into \eqref{hs:square} cancels the four potential terms
+and gives $\delta_i b_\ell$ as required. Site equations also hold.
+For $S\subseteq T$ every admissible choice for $T$ is admissible for
+$S$, proving restriction.
+
+For extension assume $S\subsetneq T$ and $|T|\le r+1$. Retain witnesses
+for the given assignment on $J(S)$ and choose cuts for $T$. If $S$
+does not wrap, take any admissible shifts for $T$. Otherwise
+$|S|=r$, and the used corners of $S$ belong to one wrapping component.
+If it meets a real type $P$, its root for either set of cuts is $P$.
+On each active link the transport of a bit label from either endpoint
+to the other is fixed, independent of the cut. Thus transport from any
+old corner to $P$ along an old path gives the same coordinate
+permutation for both cut choices. Consequently the old address is still
+the address prescribed by $S$. Keep $h_P$. The shifts on all its used
+wire arms are determined by this vector and the active link equations.
+Here and below, $S$ already specifies the sole root/address requirement
+of $T$, by the common-block argument above.
+
+If the old component contains only internal types, it lies on a single
+wire $e:P\to Q$. All its used internal nodes have the same shift $z$
+and use the same original label coordinates. Since every row is
+represented, they determine an address $a\in D_e$. Each bit occurs
+as an allowed internal label. According to the old cut, either
+$z\in\lambda_{e,0}(Q_{P,a})$ or
+$z\in b_e+\lambda_{e,1}(Q_{Q,\sigma_e(a)})$.
+These two sets coincide by \eqref{hs:images} with $\Delta_e=b_e$.
+For the new cut, choose a vector in the appropriate $Q$-set
+whose indicated affine image is $z$. This preserves $z$ at every old
+used type, including when both endpoints have the same real type.
+Choose the other real shifts freely. This constructs admissible shifts
+on $T$ preserving the shifts of every old wrapping component.
+
+On an old nonwrapping component the marker on $v\to w$ is $s_w-s_v$,
+where $s_v$ is the integral from a fixed corner to $v$. Zero integrals
+on closed walks give path independence. Put
+$g_t=h_t^{\rm new}-h_t^{\rm old}$ and replace
+$M_v$ by $M_v+s_vg_t$ on that component. The change on a horizontal
+edge is $(s_v-s_w+\delta_i)g_t=0$. On an old vertical edge $s_v=s_w$
+and $L_{\ell,t}g_t=L_{\ell,u}g_u$, so its value also stays fixed.
+Keep the old potentials on wrapping components. All these changes refer
+to disjoint sets of old corners, even if new edges merge components.
+Choose arbitrary potentials at previously unused corners. This extends
+the prescribed assignment to $J(T)$ and proves exact projection.
+\end{proof}
+
+
+\section{An affine system as a commutator obstruction}
+\label{hyb:algebra}
+
+The affine source has readouts $z_j\in V_j$, equations indexed by $I$,
+and scopes $T_i\subseteq J$:
+\begin{equation}
+ (Az)_i=\sum_{j\in T_i}\lambda_{ij}(z_j)=\beta_i.
+ \label{hyb:source-equations}
+\end{equation}
+Scope membership is retained even when $\lambda_{ij}=0$, and every
+readout occurs in a scope.  Assume $I\ne\varnothing$, as is the case for every constructed instance.  All spaces and maps below are over $\F$.
+
+\subsection{The tensor and its padding}
+
+Use the bipartite incidence graph on $I\sqcup J$.  At its vertices put
+\[
+ N_i=\F\quad(i\in I),\qquad
+ N_j=\left\{(h_i)_{i:j\in T_i}:
+                 \sum_{i:j\in T_i}h_i\lambda_{ij}=0\text{ in }V_j^*\right\},
+ \qquad R_v=\F\oplus N_v,
+\]
+with multiplication $(a,u)(b,w)=(ab,aw+bu)$.  Thus $N_v^2=0$, and an
+element of $R_v$ is a unit exactly when its scalar part is nonzero.
+For an incidence $ij$ let $R_{ij}=\F\oplus\F$ with the same
+multiplication, and use the algebra maps
+\[
+ \phi_{ij}:R_i\to R_{ij},\quad(a,h)\mapsto(a,h),\qquad
+ \psi_{ij}:R_j\to R_{ij},\quad(a,(h_t)_t)\mapsto(a,h_i).
+\]
+Choose $q\ge4$ and set
+\[
+ X^\circ=\bigoplus_v R_v^q,\qquad
+ Z^\circ=\bigoplus_{v,\,a<b}R_v\ \oplus\bigoplus_{ij,\,a,b}R_{ij}.
+\]
+The alternating tensor $\omega:X^\circ\times X^\circ\to Z^\circ$ is
+\begin{align}
+ \omega(x,x')_{v,ab}&=x_{va}x'_{vb}-x'_{va}x_{vb},\notag\\
+ \omega(x,x')_{ij,ab}
+   &=\phi_{ij}(x_{ia})\psi_{ij}(x'_{jb})
+       -\phi_{ij}(x'_{ia})\psi_{ij}(x_{jb}).
+ \label{hyb:omega}
+\end{align}
+Let $L\le X^\circ$ consist of vectors whose scalar part in slot $1$
+vanishes at every vertex. Its basis is obtained by deleting the
+corresponding scalar units. In particular $L$ contains every vector
+whose coordinates are radical elements.
+
+We include the padding needed for the recognition argument from the start:
+take a copy $D\cong Z^\circ$ and a copy $W_0\cong X^\circ\oplus D$, and put
+\[
+ X=X^\circ\oplus D,\qquad Z=Z^\circ\oplus W_0.
+\]
+Extend $\omega$ by zero on arguments in $D$ and with zero $W_0$ output.
+In each $R_v$ use $1$ followed by a basis of $N_v$, using the same
+basis in every copy of $R_v$. Use the induced coordinate bases on
+the direct sums, using the field basis $1$ for the one-dimensional
+equation and edge radicals.
+For a readout radical use the kernel basis computed in
+Section~\ref{sec:gaussian-bases}. All coordinate dot products, including
+the Frobenius pairing $\langle B,C\rangle=\sum_{z,x} B_{zx}C_{zx}$,
+refer to these fixed bases.  Define
+\begin{equation}
+ C=\{M_\omega(a):a\in L\},\qquad M_\omega(a)x=\omega(a,x),
+ \qquad Y=C^\perp\le\Hom(X,Z).
+ \label{hyb:C}
+\end{equation}
+Write $C^\circ$ for the restrictions of $C$ to $X^\circ$ with output
+$Z^\circ$, and put $Y^\circ=(C^\circ)^\perp$.  Then
+$Y=Y^\circ\oplus\Hom(D,Z^\circ)\oplus\Hom(X,W_0)$.
+The map $b(x,d)=d$ onto $Z^\circ$ is an explicit
+element of $Y$.  The free output summand contains the identity and a
+cyclic shift on $X$, as required for the recognition frame.
+
+For a linear map $\alpha:X\to Y$ write
+\[
+ \partial\alpha(x,x')=\alpha(x)x'-\alpha(x')x.
+\]
+On $X\oplus Y\oplus Z$ define the group $G_\varepsilon$ by
+\begin{equation}
+ (x,y,z)(x',y',z')=
+ \left(x+x',y+y',z+z'+\tfrac12
+       \bigl(y'x-yx'+\varepsilon(x,x')\bigr)\right).
+ \label{hyb:group}
+\end{equation}
+It has class at most two and exponent $p$.  A shear
+$(x,y,z)\mapsto(x,y+\alpha(x),z)$ maps $G_0$ to $G_\varepsilon$
+multiplicatively exactly when $\partial\alpha=\varepsilon$.
+
+\begin{lemma}[Rank and local multipliers]
+\label{hyb:local}
+For every nonzero $a\in X^\circ$, the map $M_\omega(a)$ has rank at least $q-1$.
+Consequently $Yx=Z$ for every nonzero $x\in X$, and
+$Z(G_\varepsilon)=G_\varepsilon'=Z$.
+
+More generally, let $U\le X$ and let an alternating $\gamma:U\times U\to Z$
+satisfy
+\begin{equation}
+ \gamma(u,v)=\omega(Pu,v)\quad(u,v\in U)
+ \label{hyb:partial-symbol}
+\end{equation}
+for some linear $P:U\to L$.  Call a vertex $v$ good if its $q$ scalar
+coordinate functionals have rank at least two on $U$.  At a good vertex
+there is a unique $r_v\in R_v$ such that
+\[
+ (Pu)_v=r_vu_v\quad(u\in U).
+\]
+If $i,j$ are both good and incident, then
+$\phi_{ij}(r_i)=\psi_{ij}(r_j)$.
+\end{lemma}
+
+\begin{proof}
+For the rank assertion choose $a_{va}\ne0$ and evaluate on the $q-1$
+unit vectors in the other coordinates of $R_v^q$.  In the internal
+output $(v;a,b)$ their linear combination has coefficient
+$\pm a_{va}t_b$, so these columns are independent.  Thus $C$ has no
+nonzero rank-one matrix.  Failure of $Yx=Z$ would give precisely such a
+matrix in $Y^\perp=C$, by pairing evaluation at $x$ with a nonzero
+functional on $Z$.  The evaluation brackets span $Z$.
+A central element must then have $x=0$, and its
+$Y$-coordinate must vanish as an operator. Hence the center is $Z$.
+
+For the local assertion, $\gamma(u,u)=0$ gives
+$(Pu)_v\wedge u_v=0$ in all internal coordinates.  If the scalar
+projection of $u_v$ is nonzero, one coordinate is a unit, so
+$(Pu)_v=r_u u_v$ for a unique $r_u\in R_v$.  Choose two vectors whose
+scalar projections are independent.  Their wedge has a unit coordinate.
+Polarizing the displayed identity forces their multipliers to agree.
+Every nonzero scalar projection is independent of at least one of these
+two, so its multiplier is the same $r_v$.  For zero scalar projection,
+add one of the chosen vectors and subtract again, using linearity of $P$.
+This also covers $u_v=0$.
+For an incidence with good endpoints choose $u\in U$ with a selected
+scalar coordinate nonzero at each endpoint. Two proper kernels cannot
+cover $U$.  Its diagonal incidence identity is
+\[
+ (\phi_{ij}(r_i)-\psi_{ij}(r_j))
+       \phi_{ij}(u_{ia})\psi_{ij}(u_{jb})=0.
+\]
+The last two factors are units, proving the claim.
+\end{proof}
+
+Let $\tau_i$ be the radical basis element of $R_i=\F\oplus\F$.
+Define $\varepsilon_\beta$ to have only the output $(i;1,2)$, on the
+two scalar unit inputs at vertex $i$, with value $\beta_i\tau_i$.
+Extend by alternation and bilinearity and set all other basis values to zero.
+
+\begin{proposition}[The full obstruction quotient]
+\label{hyb:cokernel}
+Every alternating twist is congruent modulo $\im\partial$ to some
+$\varepsilon_\beta$, and
+\[
+ \varepsilon_\beta\in\im\partial
+       \quad\Longleftrightarrow\quad \beta\in\im A.
+\]
+These assertions include the free input and output padding above.
+\end{proposition}
+
+\begin{proof}
+Pair alternating tensors by their values on unordered coordinate-basis
+pairs.  Antisymmetrization gives
+\begin{equation}
+ \gamma\in(\im\partial)^\perp
+ \quad\Longleftrightarrow\quad M_\gamma(x)\in C\quad(x\in X).
+ \label{hyb:global-dual}
+\end{equation}
+Indeed, on a coordinate basis $(e_a)$ of $X$ the pairing with
+$\partial\alpha$ equals
+$\sum_a\langle M_\gamma(e_a),\alpha(e_a)\rangle$.
+The values $\alpha(e_a)\in Y$ vary independently. The rank lemma
+makes $M_\omega$ injective on $L$, so such a tensor has
+the form \eqref{hyb:partial-symbol} on all of $X$.  All vertices are good.
+Lemma~\ref{hyb:local} gives local multipliers at every vertex.
+Since $P(X)\subseteq L$, testing on the scalar unit in slot $1$ at
+each vertex forces the scalar part of its multiplier to vanish.  The remaining multipliers are
+\[
+ r_i=(0,h_i),\qquad r_j=(0,(h_i)_{i:j\in T_i}),\qquad h\in\ker A^*.
+\]
+Conversely every such $h$ defines a tensor $\gamma_h=\omega(r\,\cdot,\cdot)$
+satisfying \eqref{hyb:global-dual}.  There are no extra padded terms:
+every slice in $C$ is zero on $D$ and in output $W_0$, and alternation
+also kills $D$ in the first argument.  Thus
+\[
+ (\im\partial)^\perp=\{\gamma_h:h\in\ker A^*\},\qquad
+ \langle\gamma_h,\varepsilon_\beta\rangle=\sum_i h_i\beta_i.
+\]
+The last pairing vanishes for all $h\in\ker A^*$ exactly when
+$\beta\in(\ker A^*)^\perp=\im A$. For an arbitrary twist $\varepsilon$,
+the map $h\mapsto\langle\gamma_h,\varepsilon\rangle$ is a linear
+functional on $\ker A^*$. Extend it to $\F^I$ and write the extension
+as $h\mapsto\sum_i h_i\beta_i$. Then
+$\varepsilon-\varepsilon_\beta$ annihilates $(\im\partial)^\perp$
+and therefore lies in $\im\partial$.
+\end{proof}
+
+\subsection{Computing the tensor coefficients}
+\label{sec:gaussian-bases}
+
+We give one procedure for both kernels used by the reduction.
+For an $m\times n$ matrix over $\F$, start with the $n\times n$
+identity matrix $B$. Process the rows in reverse order. The columns
+of $B$ form a basis of the kernel of the rows processed so far.
+For the next row $a$, compute $c=aB$. If $c=0$, retain $B$.
+Otherwise, swap its first nonzero coordinate with its first coordinate,
+permuting the columns of $B$ in the same way. If the current number of
+columns is $d$, take as the new columns
+\[
+ B_j-(c_j/c_1)B_1,\qquad 2\le j\le d,
+\]
+where $B_j$ and $c_j$ denote the columns and entries after the swap.
+These columns span exactly the vectors $Bt$ with $ct=0$, since the
+equation determines $t_1$ from the other coordinates. The uniqueness
+of those other coordinates proves independence. This also handles
+zero rows, zero-dimensional kernels and matrices with no rows.
+Storing the current matrix explicitly costs $O((n+1)^2)$ field
+entries, and all row updates together use
+$O((m+1)(n+1)^2)$ field operations.
+
+At a readout $j$, order the incident equations and let $e_b$ range over
+the given coordinate basis of $V_j$. Apply this procedure to the matrix
+with entries $\lambda_{ij}(e_b)$ in row $b$ and column $i$. Its kernel
+is exactly $N_j$. Store its basis columns in the original incidence
+coordinates. In this basis $\psi_{ij}$ reads the $i$-th entry of a
+stored column on a radical basis vector. Internal multiplication uses
+$1\cdot u=u$ and $N_v^2=0$. Thus \eqref{hyb:omega} computes the
+coordinates of $\omega$ directly, on every pair of coordinate units.
+The scalar restrictions defining $L$ select coordinate positions.
+Applying the same procedure to these restrictions, or deleting
+the restricted units, gives a basis $(a_h)$ of $L$.
+
+Form a matrix with one row for each $a_h$ and with columns indexed by
+$(z,x)$ in $Z\times X$ coordinate order. Its entries are
+\[
+           H_{h,(z,x)}=\omega(a_h,e_x)_z .
+\]
+Here and below a coordinate-order index ranges over basis positions.
+Equation~\eqref{hyb:C} says that a list of matrix entries belongs
+to $Y$ precisely when it is killed by $H$. Apply the procedure to
+$H$ and view its basis columns as operators $y_t:X\to Z$.
+The basis of the group input is now the ordered concatenation
+of the coordinate units $e_x$ of $X$ and these $y_t$.
+In this basis the entire alternating tensor in \eqref{hyb:group} is
+\begin{equation}
+ \begin{aligned}
+ b_\varepsilon(e_x,e_{x'})&=\varepsilon(e_x,e_{x'}),&
+ b_\varepsilon(y_s,y_t)&=0,\\
+ b_\varepsilon(e_x,y_t)_z&=(y_t)_{zx},&
+ b_\varepsilon(y_t,e_x)_z&=-(y_t)_{zx}.
+ \end{aligned}
+ \label{eq:computed-bracket}
+\end{equation}
+For the two reduction outputs insert $\varepsilon=0$ and
+$\varepsilon=\varepsilon_{\beta^*}$, respectively. Both use the same
+matrices $H$ and $y_t$.
+
+\section{Coherent residuals for arbitrary group queries}
+\label{hyb:residuals}
+
+Suppose the affine instance has nonempty exact families
+$\mathcal H_S$ for all $S\subseteq I$ with $|S|\le K$:
+they assign the readouts in $J(S)=\bigcup_{i\in S}T_i$, satisfy the
+equations in $S$, and
+$\mathcal H_T|_{J(S)}=\mathcal H_S$ whenever $S\subseteq T$.
+
+For any retained subspace $E\le X$ set
+\[
+ \begin{aligned}
+ U&=E^\perp,& Y_E&=\{y\in Y:y(E)=0\},\\
+ \mathcal R_E&=\{\rho\in\Alt(X,Z):\rho(E,X)=0\},&
+ \mathcal B_E&=\{b\in\Hom(X,Y_E):b(E)=0\}.
+ \end{aligned}
+\]
+Then $\partial$ maps $\mathcal B_E$ into $\mathcal R_E$.
+Its exact relative dual criterion is
+\begin{equation}
+ \gamma\in(\partial\mathcal B_E)^\perp
+ \quad\Longleftrightarrow\quad
+ \gamma(u,v)=\omega(Pu,v)\ (u,v\in U)
+ \text{ for some }P:U\to L.
+ \label{hyb:relative-dual}
+\end{equation}
+To see this, identify \((X/E)^*\) with \(U\) using the coordinate
+pairing on \(X\). Evaluation gives perfect pairings
+between \(\Hom(X/E,Z)\) and \(\Hom(U,Z)\), and between
+\(\Alt(X/E,Z)\) and \(\Alt(U,Z)\), using the dot product on \(Z\).
+The second pairing uses exterior powers, so it makes no choice of a
+complement to \(E\). The inclusion
+\(\Hom(X/E,Z)\hookrightarrow\Hom(X,Z)\) is adjoint to restriction to
+\(U\). Since \(Y_E\) is the inverse image of \(Y=C^\perp\) under this
+inclusion, its annihilator is \(C|_U\). For \(u\in U\) and \(y\in Y_E\)
+the map \(b(x)=\langle u,x\rangle y\) belongs to \(\mathcal B_E\).
+These rank-one maps span it. Expanding the alternating difference gives
+\[
+ \langle\gamma,\partial b\rangle
+   =\langle\gamma(u,\cdot),y\rangle .
+\]
+Indeed the two terms on each unordered pair collect all off-diagonal
+terms in the contraction on the right, while the diagonal is zero.
+Thus the contractions \(\gamma(u,\cdot)\) must all lie in \(C|_U\).
+The map \(L\to C|_U\), \(a\mapsto\omega(a,\cdot)|_U\), is surjective.
+Compose a linear section with the contraction map to obtain \(P\).
+The same calculation proves the converse in~\eqref{hyb:relative-dual}.
+
+Call a vertex good at $E$ according to Lemma~\ref{hyb:local} with
+$U=E^\perp$, and bad otherwise.  If $S_v$ is the span of its $q$ scalar
+unit vectors, the rank of those scalar functionals on $U$ is
+$q-\dim(E\cap S_v)$.  The $S_v$ have disjoint support, so
+\begin{equation}
+ (q-1)\#\{v\text{ bad at }E\}\le\dim E.
+ \label{hyb:bad-budget}
+\end{equation}
+Choose an owner $o(j)\in I$ with $j\in T_{o(j)}$ for each readout.
+Let $O(E)$ contain every bad equation and the owner of every bad
+readout.  It is monotone in $E$, and $|O(E)|\le\lfloor\dim E/(q-1)\rfloor$.
+A total readout assignment $z$ is admissible at $E$ if
+$z|_{J(O(E))}\in\mathcal H_{O(E)}$.  Its residual
+$s_i(z)=\beta_i-(Az)_i$ is zero at every bad equation.
+
+For each good equation $i$, choose $u,v\in U$ and coordinates $a<b$
+whose local minor $t=u_{ia}v_{ib}-v_{ia}u_{ib}\in R_i$ is a unit.
+Choose $z_0\in R_i$ representing, under the coordinate pairing, the
+functional $w\mapsto\operatorname{rad}(t^{-1}w)$.  In the internal
+output $(i;a,b)$ put
+\[
+ \eta_{E,i}(x,x')=
+   \bigl(\langle u,x\rangle\langle v,x'\rangle
+          -\langle v,x\rangle\langle u,x'\rangle\bigr)z_0,
+\]
+and set its other outputs to zero.  It belongs to $\mathcal R_E$.
+For a relative obstruction in \eqref{hyb:relative-dual}, with local
+multiplier $r_i=(a_i,h_i)$, the natural dual pairing gives
+\begin{equation}
+ \langle\gamma,\eta_{E,i}\rangle
+     =\operatorname{rad}(t^{-1}r_it)=h_i.
+ \label{hyb:normalized-residual}
+\end{equation}
+In particular this value is independent of the chosen minor.
+Fix these choices once for each $E$, and define
+\begin{equation}
+ \rho_E(z)=\sum_{i\text{ good at }E}s_i(z)\eta_{E,i}.
+ \label{hyb:rho}
+\end{equation}
+Its pairing with every global $\gamma_h$ equals
+$\sum_i h_i(\beta_i-(Az)_i)=\sum_i h_i\beta_i$.
+Bad equations contribute zero.  Proposition~\ref{hyb:cokernel} therefore gives
+\begin{equation}
+ \rho_E(z)\in\mathcal R_E,\qquad
+ \varepsilon_\beta-\rho_E(z)\in\im\partial.
+ \label{hyb:global-residual}
+\end{equation}
+
+\begin{lemma}[Coherent residuals]
+\label{hyb:coherence}
+Suppose $E\subseteq F$, $|O(F)|\le K$, and admissible $z_E,z_F$ agree
+on $J(O(E))$.  Then
+$\rho_F(z_F)-\rho_E(z_E)\in\partial\mathcal B_E$.
+\end{lemma}
+
+\begin{proof}
+Both tensors belong to $\mathcal R_E$.  Pair their difference with a
+relative obstruction \eqref{hyb:relative-dual}.  At an equation that
+stays good, both normalizations read the same multiplier, by restricting
+$P$ to $F^\perp\subseteq E^\perp$.  At one that becomes bad, its new
+residual is zero.  The pairing is consequently
+\[
+ -\sum_{i\text{ good at }E}\sum_{j\in T_i}
+       h_i\lambda_{ij}(z_{F,j}-z_{E,j}).
+\]
+If a readout changes, it is good at $E$, because otherwise its owner
+pins it.  Every adjacent equation is good as well, because a bad
+equation pins its whole scope.  On this complete good star,
+Lemma~\ref{hyb:local} identifies the coefficients $h_i$ with the radical
+coordinates of $r_j\in R_j$. Their definition gives
+$\sum_{i:j\in T_i}h_i\lambda_{ij}=0$.
+Grouping by changed readouts makes the pairing zero.
+Equation~\eqref{hyb:relative-dual} proves the assertion.
+\end{proof}
+
+\begin{theorem}[Exact shear families and the bijective strategy]
+\label{hyb:forward}
+If the affine instance has the exact families above and
+$m<(q-1)(K+1)$, Duplicator wins the bijective $m$-pebble game on
+$G_0,G_{\varepsilon_\beta}$ with marked-subgroup isomorphism as its
+atomic condition.  This includes arbitrary elements of all padded
+input, matrix, and output sectors.
+\end{theorem}
+
+\begin{proof}
+For each $E$ with $|O(E)|\le K$, let $\mathcal P_E$ consist of
+restrictions $\alpha|_E$ of global maps satisfying
+\[
+ \partial\alpha=\varepsilon_\beta-\rho_E(z)
+       \quad\text{for some assignment }z\text{ admissible at }E.
+\]
+These sets are nonempty by \eqref{hyb:global-residual}.  They have exact
+restriction maps.  To extend a witness at $E\subseteq F$, first extend
+its source assignment on $J(O(E))$ to one on $J(O(F))$.  Complete it
+arbitrarily to a total $z_F$.  Lemma~\ref{hyb:coherence} supplies
+$b\in\mathcal B_E$ with
+$\partial b=\rho_F(z_F)-\rho_E(z_E)$.
+Then $\alpha-b$ is a witness at $F$ and agrees with $\alpha$ on $E$.
+Conversely, an admissible assignment at $F$ is admissible at $E$.
+Apply the same lemma with this assignment held fixed and add the
+correction to a witness at $F$.  Its restriction belongs to
+$\mathcal P_E$ because the correction vanishes on $E$.
+
+Maintain that the pebbled correspondence is the shear of some
+$a\in\mathcal P_E$, where $E$ spans the retained $X$-coordinates.
+Such a shear is an isomorphism on the full subgroup
+$E\oplus Y\oplus Z$, since its residual vanishes on $E\times X$.
+After removing a pebble, for every $x\in X$ independently choose an
+extension $a_x\in\mathcal P_{E+\F x}$ of the retained $a$, and announce
+the single bijection
+\[
+ (x,y,z)\longmapsto(x,y+a_x(x),z).
+\]
+It is a translation on each fixed $x,z$ fiber.  After the selected
+move, its corresponding $a_x$ witnesses the invariant for all
+retained pebbles.  Selection on the other side uses the inverse
+bijection.  Finally \eqref{hyb:bad-budget} gives $|O(E)|\le K$ for
+every span of at most $m$ query directions.  No restriction on the
+support of those directions, including their $D$-coordinates, has
+been used.
+\end{proof}
+
+
+\section{A four-anchor frame for every comparison group}
+\label{hyb:recognition}
+
+Recall the padded spaces
+\(X=X^\circ\oplus D\), \(Z=Z^\circ\oplus W_0\), and
+\(Y=Y^\circ\oplus\Hom(D,Z^\circ)\oplus\Hom(X,W_0)\), where
+\(D\cong Z^\circ\) and \(W_0\cong X\).
+The group is \eqref{hyb:group}, and Lemma~\ref{hyb:local} gives
+\(Yx=Z\) for every nonzero \(x\in X\).
+No named coordinates are added to the input group.
+
+We use the Version-II bijective game of Lemma~\ref{lem:paper-wl-game}, with the marked-subgroup test
+made after pickup.  A winning position with \(k+1\) pairs preserves
+counting formulas in the group-word language using at most \(k\)
+variable symbols, including parameters.  Here is the needed elementary
+argument.  
+Use induction on the formula with pairs retained on the free variables.
+For an atomic equality, pick up a reserve pair: the marked-subgroup test
+preserves every word equality in the retained elements. Negation and
+conjunction preserve agreement by induction. For a counting quantifier
+on a variable \(v\), release its old pair, if present. A winning
+bijection on the two groups matches extensions that are winning
+positions. Induction applied with each possible new value of \(v\)
+shows that it matches the two sets of satisfying values bijectively.
+Therefore the counting quantifier has the same truth value. The same
+argument with no free variables transfers sentences. Formula length
+and quantifier depth do not enter the pair count.
+\begin{theorem}[Recognition and the zero-twist criterion]
+\label{hyb:allmates}
+If Duplicator wins the Version-II game with at least \(40\) pairs
+between \(G_0\) and an arbitrary finite group \(H\), then
+\[
+ H\cong G_\eta
+ \quad\text{for some }\eta\in\Alt(X,Z).
+\]
+The spaces and evaluation map in this conclusion are exactly the
+prescribed \(X,Y,Z\).  Four retained anchors name the classes of the two successive quotients
+and each central element.  Moreover, for every \(\eta\),
+\begin{equation}
+ G_0\cong G_\eta
+ \quad\Longleftrightarrow\quad
+ \eta\in\operatorname{im}\partial.
+ \label{hyb:zero-isomorphism}
+\end{equation}
+\end{theorem}
+\begin{proof}
+Put \(n=\dim X\), \(m=\dim Z\),
+\(s=\dim Y\), and \(T=p^{n+s}\).
+Lemma~\ref{hyb:local} gives
+\(Yx=Z\) for every \(x\neq0\).
+
+For \(g=(x,y,z)\), its centralizer is the kernel of the linear map
+\((x',y',z')\mapsto y'x-yx'+\eta(x,x')\). If \(x\ne0\),
+the image is all of \(Z\), giving centralizer size precisely
+\(p^{n+s}=T\). If \(x=0\), the rank is at most \(n\) and
+\(m=n+\dim Z^\circ>n\). Its centralizer is strictly larger than \(T\).
+Consequently
+\[
+ \mathcal B=Y\oplus Z=\{g:|C(g)|>T\},\qquad Z(G_\eta)=Z.
+\]
+Use the two-variable predicates
+\[
+ \mathsf B(u):=\exists^{\geq T+1}v\ [u,v]=1,
+ \qquad \mathsf Z(u):=\forall v\ [u,v]=1.
+\]
+Exponent \(p\), class at most two, the assertion that \(\mathsf B\)
+is an abelian subgroup, and the sizes of \(H,\mathsf B(H),\mathsf Z(H)\)
+transfer.  Hence, writing \(\mathcal B_H=\mathsf B(H)\),
+\begin{equation}
+ |H/\mathcal B_H|=p^n,\qquad
+ |\mathcal B_H/Z(H)|=p^s,\qquad |Z(H)|=p^m.
+ \label{hyb:sizes}
+\end{equation}
+It contains \(Z(H)\) and is normal because its defining
+centralizer-size condition is conjugation invariant.
+
+Choose a basis \(e_0,\ldots,e_{n-1}\) of \(X\), with
+\(e_0\in D\), and let \(Ae_i=e_{i+1\bmod n}\).
+Pebble the four elements
+\[
+ a_0=I:X\to W_0,\qquad
+ a_1=A:X\to W_0,\qquad
+ b(x,d)=d\in Z^\circ,\qquad t=(e_0,0,0).
+\]
+The first three belong to \(Y\) and have all other
+coordinates zero.  Fix the four winning responses as parameters in
+\(H\). The first three lie in \(\mathcal B_H\) by transfer of
+\(\mathsf B\).
+The relations
+\[
+ [u,a_0]=1\ \Longleftrightarrow\ \mathsf B(u),
+ \qquad \forall u\exists v\ [v,a_0]=[u,a_1]
+\]
+transfer.  Thus commutation with \(a_0\) embeds \(H/\mathcal B_H\)
+in its center, and \(a_1\) defines an endomorphism \(A_H\) of that
+quotient.
+
+For \(x=\sum_{i<n}x_i e_i\), name its quotient class by a formula
+\(\delta_x(u)\).  Starting with \(\delta_0(u)=\mathsf B(u)\),
+Horner evaluation implements the polynomial step \(f\mapsto Uf+c\) by
+\begin{equation}
+ \delta_{Uf+c}(u):=
+ \exists v\bigl(\delta_f(v)\land
+       [ut^{-c},a_0]=[v,a_1]\bigr).
+ \label{hyb:horner}
+\end{equation}
+Only the working names \(u,v\) are used: they alternate in the
+recursive subformula, where the other outer name is not free.
+These formulas name the cosets \(\sum_i x_iA_H^it\mathcal B_H\).
+Their pairwise disjointness transfers from the reference group.
+Equation~\eqref{hyb:sizes} then makes them all quotient classes,
+identified linearly with \(X\).
+
+Let \(\iota:Z^\circ\to D\leq X\) be the chosen copy map.
+For \(z=(z_1,z_0)\in Z^\circ\oplus W_0\), using the fixed copy
+\(W_0\cong X\), define
+\begin{equation}
+ \Phi_z(w):=\exists u\exists v\bigl(
+   \delta_{z_0}(u)\land\delta_{\iota(z_1)}(v)
+   \land w=[u,a_0][v,b]\bigr).
+ \label{hyb:central-name}
+\end{equation}
+Since \(\mathcal B_H\) is abelian, these commutators depend only on
+the named quotient classes.  Each formula therefore names one central
+element, linearly in \(z\).  Transferred pairwise disjointness and
+\eqref{hyb:sizes} identify all of \(Z(H)\) with \(Z\).
+
+For each \(y\in Y\), set
+\begin{equation}
+ \Psi_y(w):=\mathsf B(w)\land
+ \bigwedge_{i<n}\forall u\bigl(
+     \delta_{e_i}(u)\Longrightarrow
+     \Phi_{y(e_i)}([u,w])\bigr).
+ \label{hyb:matrix-name}
+\end{equation}
+Every sentence \(\exists w\,\Psi_y(w)\) transfers.  Different
+\(y\)'s give different central cosets.  Two realizations of the same
+formula differ by an element commuting with \(\mathcal B_H\) and
+with a basis of \(H/\mathcal B_H\), hence by a central element.
+The middle count in \eqref{hyb:sizes} makes these all the classes of
+\(\mathcal B_H/Z(H)\).  Commutation is linear, so this identifies
+that quotient linearly with exactly \(Y\), with exactly
+its original evaluation map.
+
+Here is explicit variable accounting.  In the last two rows every
+one of the four anchor names is reserved. The working count includes
+all free query names.  Existential closure and conjunctions reuse the
+same names.
+\begin{center}
+\begin{tabular}{lc}
+\hline
+Formula or assertion & Working names \\
+\hline
+\(\mathsf B,\mathsf Z\) & 2 \\
+Subgroup, exponent, class and cardinality assertions & at most 3 \\
+\(\delta_x\), including its base counting quantifier & 2 \\
+\(\Phi_z(w)\) & 4 \\
+\(\Psi_y(w)\), or \(\Phi_z([u,v])\) & 5 \\
+\hline
+\end{tabular}
+\end{center}
+For example, \(\Phi\) uses its output, two representatives and one
+Horner helper. Substituting a two-query commutator for the output adds
+one name.  Thus at most nine variable symbols occur, leaving the
+required pickup reserve well within forty pairs.
+
+
+To recover the group law, put \(d=2^{-1}\bmod p\),
+use \([g,h]=ghg^{-1}h^{-1}\), and define
+\(g\oplus h=gh[g,h]^{-d}\). Commutators are central and multiply
+in either argument. Thus both bracketings of \(g\oplus h\oplus k\)
+equal \(ghk([g,h][g,k][h,k])^{-d}\). Also
+\(hg[h,g]^{-d}=gh[g,h]^{d-1}=gh[g,h]^{-d}\).
+The identity and inverses agree with the group ones, and repeated
+addition of \(g\) gives its powers. The resulting abelian group has
+exponent \(p\) and hence is an \(\F\)-vector space. Its commutator
+is alternating and \(\F\)-bilinear, since commutators with central
+elements vanish. The original multiplication is recovered as
+\(gh=g\oplus h\oplus d[g,h]\), with central elements written additively
+in the last term.
+
+In this vector space the subgroups \(Z(H)\subseteq\mathcal B_H\)
+are subspaces. Choose linear sections of \(H\to H/\mathcal B_H=X\)
+and \(\mathcal B_H\to\mathcal B_H/Z(H)=Y\).
+The bracket on the second section is zero, and its bracket with the
+first has the evaluation just recovered. The bracket on two lifts of
+\(X\) defines an alternating \(\eta:X^2\to Z\).
+The multiplication in the resulting coordinates is precisely
+\eqref{hyb:group}, yielding \(H\cong G_\eta\).
+In these coordinates the four matched anchors have the prescribed
+quotient label of the seed and matrix labels of the other three:
+the latter follow by transferring
+\(\Psi_{a_0}(a_0),\Psi_{a_1}(a_1),\Psi_b(b)\).
+These labels suffice for every use of the anchors.
+
+Finally the centralizer threshold defines \(\mathcal B\) in both
+\(G_0\) and \(G_\eta\), so every isomorphism between them preserves
+this sector. The vector addition just constructed is a group term,
+so such an isomorphism is also \(\F\)-linear. Modulo the center it
+sends the pure input \(x\) to \((Cx,\beta(x))\) for linear
+\(C:X\to X\), \(\beta:X\to Y\). The induced map \(C\) on the
+quotient by \(\mathcal B\) is invertible. Pure inputs commute in
+\(G_0\). Therefore
+\[
+ 0=\beta(x')Cx-\beta(x)Cx'+\eta(Cx,Cx')
+ \qquad(x,x'\in X).
+\]
+Taking \(\alpha=\beta C^{-1}\) gives \(\partial\alpha=\eta\).
+Conversely the shear for \(\partial\alpha=\eta\) is an isomorphism,
+with inverse obtained by subtracting \(\alpha(x)\).
+This proves~\eqref{hyb:zero-isomorphism}.
+\end{proof}
+
+\begin{corollary}[Retained anchors and arbitrary responses]
+\label{hyb:responses}
+Continue a winning position with these four anchor pairs, and normalize
+the mate by a global shear to an old twist
+\(\varepsilon:(X^\circ)^2\to Z^\circ\), extended by zero on the
+added coordinates, using Proposition~\ref{hyb:cokernel}.
+For independent old query vectors \(x_1,\ldots,x_j\in X^\circ\), pebble
+\((x_i,0,0)\) in the reference group.  Their responses have quotient
+coordinates exactly \(x_i\).  If \(y_i\in Y^\circ\) is the old-output,
+old-input part of the response's \(Y\)-coordinate, then
+\begin{equation}
+ y_i(x_h)-y_h(x_i)=\varepsilon(x_i,x_h).
+ \label{hyb:response-equation}
+\end{equation}
+These queries and their checks require
+\(\max\{40,j+4\}\) pairs. Any additional probe is counted separately.
+\end{corollary}
+\begin{proof}
+A global shear fixes the three \(Y\)-anchors and the
+center.  It may move the seed's lift, but not its quotient class.
+Hence \eqref{hyb:horner}--\eqref{hyb:matrix-name}, including the old
+\(X^\circ\)-coordinates and old \(Z^\circ\)-projection, are unchanged.
+Their bounded-variable tests force each response's quotient label.
+Projecting the commutation of two responses to the old output gives
+\eqref{hyb:response-equation}. Central offsets play no role.
+If a label or pair relation failed, Spoiler could discard unrelated
+queries and test it with the counted variables and a spare pair.
+This hypothetical test adds no permanently occupied queries.
+No affine form of an announced bijection is assumed.
+\end{proof}
+
+\section{Decoding and the reduction}
+\label{sec:reduction}
+
+Keep the four anchors from the reconstruction lemma.
+After its fixed coordinate identification and a shear, every equivalent
+mate has the form $G_{\eps_\beta}$, by
+Proposition~\ref{hyb:cokernel}. A shear fixes the center and the
+quotient $X$, so all coordinate formulas retain their meaning.
+Only the quotient of the seed and the matrix classes of the other
+anchors enter those formulas. Their central coordinates are irrelevant.
+
+\subsection{What a frame reads}
+
+For an equation or readout vertex $v$, its frame consists of the $q$
+pure group elements $(e_{va},0,0)$, where $e_{va}$ is the scalar unit
+in coordinate $a$ of $R_v^q\le X^\circ$. Their answers have the same
+$X$-coordinates. Let $y_{va}:X^\circ\to Z^\circ$ be the old-output
+component of the answer's matrix coordinate, restricted to $X^\circ$.
+It is orthogonal to $C^\circ$ under the matrix pairing. Since all pure
+$X$ queries commute in $G_0$, any two retained answers satisfy
+\begin{equation}
+ y_{va}(e_{wb})-y_{wb}(e_{va})
+       =\eps_\beta(e_{va},e_{wb}).
+ \label{eq:decoded-commuting}
+\end{equation}
+The added input and output spaces do not contribute to this equation.
+No linearity of Duplicator's announced bijection is assumed.
+
+For an incidence $ij$, define the values read by its two endpoint frames:
+\begin{equation}
+ \theta_{i\to j}=-\sum_{a,b=1}^q
+       \bigl(y_{ia}(e_{jb})\bigr)_{ij;ab,\rad},\qquad
+ \theta_{j\to i}=-\sum_{a,b=1}^q
+       \bigl(y_{jb}(e_{ia})\bigr)_{ij;ab,\rad}.
+ \label{eq:theta}
+\end{equation}
+The subscript selects the radical coefficient of the indicated
+$R_{ij}$ output.
+
+\begin{lemma}[Frame decoding]
+\label{lem:decoding}
+Every retained equation frame satisfies
+$\sum_{j\in T_i}\theta_{i\to j}=\beta_i$.
+Every retained readout frame determines a vector $z_j\in V_j$ with
+$\theta_{j\to i}=\lambda_{ij}(z_j)$ for all its incidences.
+Coexisting endpoint frames have $\theta_{i\to j}=\theta_{j\to i}$.
+\end{lemma}
+\begin{proof}
+Pair $y_{ia}$ with $M_\omega(\tau_i e_{ia})\in C^\circ$ and sum over $a$.
+The internal contribution is
+\[
+ \sum_{a<b}\bigl(y_{ia}(e_{ib})-y_{ib}(e_{ia})\bigr)_{i;ab,\rad}
+       =\beta_i,
+\]
+by~\eqref{eq:decoded-commuting}. Only the pair $(1,2)$ carries a twist.
+The incidence contribution is $-\sum_j\theta_{i\to j}$, proving the
+equation identity. The tested vectors lie in $L$ because they are radical.
+
+For a readout vertex take any $u=(u_i)_i\in N_j$, pair each $y_{jb}$
+with $M_\omega(u e_{jb})$, and sum over $b$. Its internal terms cancel
+by~\eqref{eq:decoded-commuting}, since that vertex has no twist.
+The incidence terms give $\sum_i u_i\theta_{j\to i}=0$.
+Thus $(\theta_{j\to i})_i\in N_j^\perp$, which is exactly the image of
+$z\mapsto(\lambda_{ij}(z))_i$. Fix a linear right inverse on this
+image to choose the decoded $z_j$. Finally the incidence twist is zero,
+so summing~\eqref{eq:decoded-commuting} gives equality of the two values.
+\end{proof}
+
+If two equation frames share a scalar readout with nonzero coefficients
+at both occurrences, retain both and query that readout's frame. When its coefficient
+in equation $i$ is $a_{ij}\ne0$, its underlying value is
+$\theta_{i\to j}/a_{ij}$. The lemma forces both values to equal the
+decoded readout. This hypothetical continuation uses $3q$ frame pairs
+and proves consistency of the existing position. It adds no permanent
+frame. The same test forces a zero-coefficient incidence value to vanish.
+For each site separately, query its equation frame and its owned
+readout frame. Its equation identity then gives zero site shift.
+
+\subsection{From a winning group game to scalar images}
+
+Write $Q=q(r+1)$. Suppose the winning game has at least
+$Q+40$ pairs in total, counting the four anchors. For a type $t$ and an allowed full address $a$,
+query the $r$ horizontal readout frames of its ring. Let $Q_{t,a}$ be
+the set of all sums of their decoded vectors arising in continuations
+of the fixed anchoring history that use pure unit queries and removals,
+keep the anchors, and end
+with only this ring and the anchors retained. Allow every assignment
+of frames to pebble slots. These sets are nonempty.
+
+
+Fix one link and an address permitted on that link. Starting with any
+history giving a departure value \(h_t=\sum_i z_i\), replace the
+horizontal frame in row \(i\) by its square frame, for each \(i\) in
+turn. Place the new frame before releasing the old frame and reuse the
+released slots at the next row. When the two coexist, the left horizontal
+incidence value of square \(i\) is \(L_{\ell,t}z_i\).
+Now all square frames are present. At the vertical readout in row \(i\),
+the two adjacent squares have respective coefficients \(+1\) and
+\(-1\). The three-frame test therefore makes their two values sum to
+zero, including across the last and first rows. The tests can be
+performed in separate hypothetical continuations since each checks a
+value already fixed by square responses. Replace each square by its
+arrival horizontal frame in the same manner. For its decoded value
+\(z'_i\), the previously fixed right horizontal incidence value is
+\(-L_{\ell,u}z'_i\). Summing the equation identities of the one
+simultaneously retained square ring yields
+\[
+ L_{\ell,t}h_t-L_{\ell,u}h_u=\sum_i\beta_{B(i,\ell,a)}
+   =\Delta_\ell(a),\qquad h_u=\sum_i z'_i.
+\]
+The arriving ring is a continuation from the original anchoring
+history, so \(h_u\) is in its defined set. Starting instead from any
+arrival ring and reversing the replacements gives the reverse inclusion
+of scalar images. At internal wire nodes both forms are the identity,
+hence composing the link-image equalities yields~\eqref{hs:images}.
+At most $r+1$ frames and four anchors are retained in an actual
+transfer. For a consistency or coordinate test, release unrelated
+marks and retain the relevant frames or elements together with the
+anchors. Since $r\ge3$, $3q+40\le Q+40$, and the formulas of the
+reconstruction lemma fit in the same budget. A spare pair remains for
+the after-pickup test. This justifies every asserted constraint on a
+winning history.
+
+\subsection{The two directions and their overlap}
+
+For an input $w$ to a fixed exponential-time machine, construct its
+affine system, and choose
+\begin{equation}
+ K=r+1,\qquad q=r+100,\qquad Q=q(r+1),\qquad k=Q+40.
+ \label{eq:parameters}
+\end{equation}
+Output the dense alternating tensor of the padded group $G_0$ and $k$.
+
+If the machine accepts, let $H\equiv_k^{II}G_0$. The reconstruction
+lemma gives $H\cong G_\eps$ with the prescribed evaluation space.
+Proposition~\ref{hyb:cokernel} and a shear replace $\eps$ by
+$\eps_\beta$. Keep the four anchors and transport the winning strategy
+through these fixed isomorphisms. The $k+1$-pair game has enough space
+for the decoder. It forces zero site shifts and the image sets
+\eqref{hs:images}. Lemma~\ref{hs:source} gives $\beta\in\im A$.
+Hence $\eps_\beta\in\im\partial$, so $H\cong G_0$.
+This proves identification against every finite group.
+
+If the machine rejects, take the explicit $\beta^*$ of
+Lemma~\ref{hs:source}. It is insoluble and has exact local families
+through $K$ blocks. The zero-twist isomorphism criterion in the
+reconstruction lemma gives $G_0\not\cong G_{\eps_{\beta^*}}$.
+Theorem~\ref{hyb:forward} supplies equivalence for every number of pairs
+less than $(q-1)(K+1)$. In particular the pair is Version-II equivalent
+through dimension
+\begin{equation}
+ (q-1)(K+1)-2=Q+96.
+ \label{eq:no-range}
+\end{equation}
+This includes $k$ and leaves room for the version comparisons below.
+
+Lemma~\ref{hyb:local} gives $Z(G)=G'=Z$ for both groups.
+The incidence system contains an equation and $q\ge4$, so $Z\ne0$.
+Thus each group has class exactly two and exponent $p$.
+
+\paragraph{Versions I and III.}
+Set $k_{II}=k$, $k_I=k+6$, and $k_{III}=\lceil k/2\rceil+2$.
+The implications between versions are proved in
+Lemma~\ref{lem:version-comparisons}. On acceptance, Version-I
+equivalence at $k_I$ or Version-III equivalence at $k_{III}$ implies
+Version-II equivalence at $k$, so the argument just given forces
+isomorphism. On rejection, Version-II equivalence at $Q+96$ implies
+Version-I equivalence at $k_I$, since $k_I\le Q+96$.
+In turn this implies Version-III equivalence at $k_{III}$, since
+$2k_{III}+1\le k_I$ and $k_{III}\ge2$. The same pair thus witnesses
+failure of identification at the required dimension in each version.
+
+\paragraph{Equivalence of nonisomorphic pairs.}
+Always output $(G_0,G_{\eps_{\beta^*}})$ at the corresponding dimension.
+The source shift $\beta^*$ is insoluble on every input, so the two
+groups are always nonisomorphic. They are distinguished on acceptance
+and equivalent on rejection. Since EXPTIME is closed under complement,
+this is an EXPTIME-hardness reduction for equivalence. The upper bound
+below completes both claims of Theorem~\ref{thm:main}.
+
+\paragraph{Writing the reduction.}
+For a fixed source machine, the compiler gives a polynomial-size list
+of circuit types and connection schemas, with their coordinate domains
+and bit maps. The vertices and incidences of Section~\ref{hs:section}
+are enumerated from types, wires, links, rows and at most two bits per
+local label. Domain membership and \eqref{hs:square} determine the
+scopes, coefficients and charge. These enumerations never expand the
+list of full bit addresses. Fix orders of disjoint summands and
+enumerate each finite product of indices lexicographically.
+
+For an explicit size bound, let $s$ be one plus $q$, the numbers of
+equations, readouts and incidences, and the sum of the readout
+dimensions, all added together. This is polynomial in the source
+input length. At a readout $j$ the dimension of $N_j$ is at most
+its number of incident equations. Hence $\sum_v\dim R_v=O(s)$,
+$\dim X^\circ=O(qs)$ and $\dim Z^\circ=O(q^2s)$, the last bound
+including both kinds of output. Write $x=\dim X$ and $z=\dim Z$.
+After padding $x,z=O(q^2s)$, $\dim L\le x$, and $\dim Y\le xz$.
+The matrix $H$ of Section~\ref{sec:gaussian-bases} therefore has at
+most $x$ rows and $xz$ columns. Its entries are computed from the stored
+local basis columns by \eqref{hyb:omega}. The local eliminations and
+this final elimination take polynomially many field operations on
+polynomially many stored entries. The prime $p$ is fixed, so each
+field operation can be implemented by a fixed finite table.
+
+For each output tensor, write its two dimensions in unary, each
+terminated by a zero. Emit its coefficients in input--input--output
+order using \eqref{eq:computed-bracket}, including the diagonal and
+both orders of each input pair. Represent a field element by its least
+residue $u\in\{0,\ldots,p-1\}$ and emit $1^u0$. There are at most
+$(x+xz)^2z$ entries. Identification emits the base description, and
+equivalence emits the base followed by the charged description.
+Append the positive dimension prescribed for the chosen version, in
+binary without leading zeroes or as the unterminated unary word $1^k$.
+The dimension is polynomially bounded by \eqref{eq:parameters} and
+the displayed version comparisons.
+
+A deterministic multitape transducer can implement the stated loops
+with counters and polynomial-length tables. Even scanning an entire
+table per access takes polynomial time. To obtain a one-tape machine,
+use one track for each simulated tape and mark its head. A constant
+number of sweeps of the occupied interval suffices for each step,
+and after $t$ steps the interval has length $O(t+|w|+1)$. A final
+sweep leaves only the encoded output at the origin. Thus for each
+fixed machine, prime, version and dimension encoding the reduction
+runs in polynomial time on a deterministic one-tape machine.
+
+\begin{proof}[Proof of Corollary~\ref{cor:unbounded}]
+Take the affine system consisting of the single equation $0=1$ and
+no readouts. Through $K=0$ blocks its exact local family consists of
+the unique empty assignment on the empty set. Given $k\ge1$, put
+$q=2k+6$ and take the groups $G_0,G_{\varepsilon_\beta}$ of
+\eqref{hyb:group}. Since $\beta=1\notin\im A=\{0\}$,
+Proposition~\ref{hyb:cokernel} gives $\varepsilon_\beta\notin\im\partial$.
+Thus $G_0\not\cong G_{\varepsilon_\beta}$ by \eqref{hyb:zero-isomorphism}.
+Both groups have exponent $p$ by \eqref{hyb:group} and have center
+equal to their nonzero derived subgroup by Lemma~\ref{hyb:local}, so
+both have class two. Since
+$2k+4<q-1=(q-1)(K+1)$, Theorem~\ref{hyb:forward} and
+Lemma~\ref{lem:paper-wl-game} give equivalence in Version II at
+dimension $2k+3$. Lemma~\ref{lem:version-comparisons} gives
+equivalence in Versions I and II at $k$, and in Version III at $k$
+for $k\ge2$. When $k=1$, the two groups have equal order, which yields
+unary Version-III equivalence by Lemma~\ref{hu:full-gadget}.
+\end{proof}
+
+\section{The exponential-time upper bound}
+\label{hu:section}
+
+Write $L$ for the input length. A tensor whose input and output spaces
+have dimensions $s,t$ represents a group of order $n=p^D$, where
+$D=s+t\le L$. Read its two self-delimiting dimensions and its $s^2t$
+field entries. Reject an out-of-range entry, a nonzero diagonal entry,
+or a failure of skew symmetry. These tests are sufficient, since the
+array extends uniquely by bilinearity. For a pair, the count $s^2t$
+determines where the second tensor starts. Check the remaining bits
+for the prescribed canonical encoding of a positive $k$.
+The input tests take polynomial time in $L$, including when a
+dimension is zero. For a supplied pair, unequal sums of dimensions give
+unequal orders and can be rejected before either table is expanded.
+Listing the $n$ coordinate vectors and applying
+\eqref{eq:tensor-group} gives the entire Cayley table in
+$p^{O(D+1)}$ time for fixed $p$. In each version the group-tuple
+histogram has total multiplicity $n^k$. Thus equivalent groups have
+the same order, including when just one of them is tensor-described.
+In the Version~III graph, each ordered pair $(g,h)$ has its own
+four-vertex path $u_0u_1u_2u_3$, with additional edges from
+$u_0,u_1,u_3$ to $g,h,gh$, respectively.
+
+\begin{lemma}[A cap on the dimension]
+\label{hu:cap}
+Every group of order $p^D$ is identified among all finite groups by
+each of the three versions at every dimension $k\ge D+10$.
+\end{lemma}
+\begin{proof}
+At order one the claim follows from the multiplicity test. Otherwise
+choose generators $a_1,\ldots,a_d$ successively outside the subgroup
+already generated, until they generate $G$. At every step the
+subgroup order increases by a factor at least $p$, so $d\le D$.
+Choose for each $g\in G$ a word $w_g$ in positive powers of these
+generators representing $g$, with $w_1$ the empty word. Such words
+suffice in a finite group.
+
+Use the ternary relation $M(x,y,z)$ for $xy=z$. There is a sentence
+asserting that some $x_1,\ldots,x_d$ give the words $w_g$ pairwise
+distinct values and satisfy $w_gw_h=w_{gh}$ for every $g,h\in G$.
+In a group of order $n$ the sentence holds exactly when
+$g\mapsto w_g(x_1,\ldots,x_d)$ is an isomorphism. It holds in $G$.
+Here is an explicit variable bound independent of word length.
+Write $W_w(u)$ for evaluation of a word at $u$. Use $M(u,u,u)$ for
+the empty word, and use
+\[
+ W_{w x_i}(u)=\exists v\bigl(W_w(v)\land M(v,x_i,u)\bigr)
+\]
+with two alternating names for the endpoint and predecessor. An
+equality $w_gw_h=w_{gh}$ uses three endpoint names $u,v,z$, their
+three separate evaluation formulas, and $M(u,v,z)$. Distinctness
+uses two endpoints. One further name suffices inside every evaluation
+formula, by rebinding the endpoint in the smaller subformula. Thus
+$d+4$ names suffice in the multiplication language.
+
+For the multiplication graph use the vertex predicate $P(x)$ meaning
+that $x$ has at least four neighbors. For $n\ge2$ it picks out exactly
+the group vertices, of degree $3n$, since auxiliary vertices have
+degree at most three. Relativize group quantifiers to $P$. Define
+$M(x,y,z)$ by requiring four distinct vertices outside $P$, forming
+a path in order, with $x,y,z$ adjacent to its first, second and
+fourth vertices, respectively. The components induced outside $P$
+are exactly the private four-vertex paths. Only the forward
+orientation has its second vertex adjacent to a group element, so
+this formula defines the intended ordered product, also for repeated
+arguments. Its four auxiliary names and a fifth name for the
+counting quantifier in $P$ give at most $d+9$ names altogether.
+
+For completeness, equality of round-$r$ joint colors at two
+$k$-tuples preserves the truth of every counting formula of
+quantifier depth at most $r$ using their $k$ coordinate names, when
+round-zero colors record the atoms. This follows by induction:
+Boolean combinations preserve the assertion, and the multiset of
+joint replacement vectors, projected to the quantified coordinate,
+gives the number of assignments with each preceding color.
+Version~I records the multiplication atoms, Version~II records them
+as word relations, and the graph records adjacency. Equality of the
+restricted histograms supplies tuples of equal round-$r$ color for
+each $r$, as the group is nonempty. Take $r$ equal to the depth of
+the sentence just constructed. At $k\ge D+10$ it has the same
+truth value in the two groups in each version, proving the claim.
+\end{proof}
+
+\begin{lemma}[Full histograms on multiplication graphs]
+\label{hu:full-gadget}
+For $k\ge2$, Version~III equivalence is equivalent to equality, at
+each round, of the color histograms on \emph{all} $k$-tuples of the
+two multiplication graphs. At $k=1$, Version~III equivalence is
+equivalent to equality of group orders.
+\end{lemma}
+\begin{proof}
+Fix $r$ and start from group tuples with matching round-$(r+k)$
+colors, which exist when the restricted histograms agree. At each
+of $k$ successive replacements, equality of the current colors
+gives a bijection of the vertex sets matching the entire preceding
+replacement vector, by matching the fibers of every vector. Replace
+coordinates $1,\ldots,k$ in order. The bijections may depend on the
+preceding choices, and together they give a bijection on all final
+vertex tuples preserving their round-$r$ colors.
+
+Conversely, equality of the full histograms gives equal graph orders,
+hence equal group orders since the graph has $n+4n^2$ vertices.
+Order one is immediate. For $n\ge2$ the round-one color of a tuple
+determines which coordinates satisfy $P$. Indeed, keep the coordinate
+in question, replace a different coordinate, and count adjacent
+replacements using the initial colors. Full histogram equality at
+round $r+1$ permits restriction to the tuples all of whose entries
+satisfy $P$. Project to round $r$ to recover the required histogram.
+
+In dimension one the graph uses ordinary neighbor refinement. The
+five vertex types are the group vertices and the four path positions
+$0,1,2,3$. A group vertex has $n$ neighbors of each type $0,1,3$.
+The path vertices have neighbor types $(G,1)$, $(G,0,2)$, $(1,3)$,
+and $(G,2)$, respectively. Induction on the number of rounds shows
+that the color of each type depends only on the order. Conversely,
+the cardinality of the restricted histogram is the order.
+\end{proof}
+
+\begin{lemma}[Enumerating all comparison groups]
+\label{hu:enumeration}
+For fixed $p$, in time $p^{O((D+1)^3)}$ one can list group tables of
+order $p^D$ containing a representative of every isomorphism class.
+\end{lemma}
+\begin{proof}
+Start with the trivial group. At stage $m$ a table $K$ of order
+$p^m$ comes with $m$ distinguished generators. Fix for every $h\in K$
+one positive generator word for $h$, using breadth-first search from
+the identity with an edge for right multiplication by each generator.
+Choose $m$ proposed generator images in $K$ and a carry $c\in K$.
+Substitution in the fixed words gives a function $\theta:K\to K$.
+On $\{0,\ldots,p-1\}\times K$ form the table
+\[
+ (a,h)(b,h')=
+ \bigl((a+b)\bmod p,\;
+      c^{\lfloor(a+b)/p\rfloor}\theta^{\,b}(h)h'\bigr),
+\]
+where $\theta^{\,b}$ denotes function iteration. Check identity
+$(0,1)$, two-sided inverses, and associativity by table lookup.
+Check that $(1,1)$ and $(0,s)$ for the distinguished $s\in K$
+generate all entries. Retain exactly the tables passing these tests.
+
+For coverage, every nontrivial finite $p$-group of order $p^{m+1}$
+has a normal subgroup of index $p$. Indeed the class equation makes
+the center's order divisible by $p$. A nonidentity central element
+of order $p^a$ has a power of order $p$. Quotient by the resulting
+central subgroup and lift a normal subgroup of index $p$ by
+induction, with the group of order $p$ as base case. Given this
+normal subgroup $K$, let $x$ lift a generator of the cyclic
+quotient. Each group element has a unique expression $x^a h$ with
+$0\le a<p$ and $h\in K$. Take the actual generator images under
+$h\mapsto x^{-1}hx$ and take $c=x^p$. Then
+\[
+ x^ahx^bh'=x^{(a+b)\bmod p}
+    c^{\lfloor(a+b)/p\rfloor}\theta^{\,b}(h)h'.
+\]
+Induction and transport through a tail isomorphism show that this
+choice occurs in the enumeration and passes all tests.
+
+At stage $m$ there are $p^{m(m+1)}$ choices per preceding table.
+The number of complete choice sequences is at most
+$p^{\sum_{m=0}^{D-1}m(m+1)}\le p^{D^3}$, and the number of prefixes
+is at most $D+1$ times that bound. Each table computation, test,
+and word search takes polynomial time in $p^{D+1}$. Repetitions do
+not affect coverage or the bound.
+\end{proof}
+
+\begin{proposition}
+\label{hu:membership}
+For each version and each encoding of $k$, tensor-input identification
+among all finite groups and tensor-input equivalence belong to
+$\mathrm{EXPTIME}$.
+\end{proposition}
+\begin{proof}
+After input validation, compare $k$ with $D+10$ before allocating any
+tuple table. For instance, scan the parameter with a running value
+saturated at $D+10$. Isomorphic groups have matching colors in
+every round by transporting replacement choices along the isomorphism.
+Thus by Lemma~\ref{hu:cap}, above or at the cap identification is
+automatic and equivalence is precisely isomorphism. For a pair first
+reject unequal group orders. At equal order an isomorphism test costs
+$n^{D+O(1)}$: choose at most $D$ generators of the first group by
+successive subgroup searches, fix a representative generator word
+for each element, and try every assignment of generator images in
+the second group. Test whether substitution yields a bijection
+respecting the entire multiplication table. Every isomorphism is
+tested and each test is polynomial in $n$.
+
+Below the cap the two structures are refined together with shared
+color numbers and with replacements in each tuple's own structure.
+For Version~II, to compare the initial types of tuples $a,b$,
+generate the subgroup of the product generated by the pairs
+$(a_i,b_i)$, by a search from the identity. Its projections onto
+the two marked subgroups are surjective. They are both injective
+exactly when the correspondence $a_i\mapsto b_i$ extends to an
+isomorphism of these subgroups, equivalently when the word types
+agree. This costs polynomial time in $k$ and $n$ for each comparison.
+Within one structure the same test applies. Version~I only needs
+the equality and multiplication tables of tuple entries. For
+Version~III use Lemma~\ref{hu:full-gadget}.
+
+The total number of tuples is at most $Q=2(n+4n^2)^k$.
+Each color partition refines its predecessor and a round without a
+split fixes all subsequent partitions, since the new labels then
+only rename the old classes. Thus at most $Q$ strict refinements
+are possible. A round can be carried out in polynomial time in
+$Q,n,k$ by sorting the replacement vectors and giving equal
+signatures the same integer label. The stable histogram answers
+equivalence since each color retains its parent. For $k<D+10$,
+this computation takes $p^{O((D+1)^2)}$ time.
+
+For identification below the cap, apply the equivalence test and
+the isomorphism test to each table from Lemma~\ref{hu:enumeration}.
+Reject exactly when some equivalent table is nonisomorphic to the
+input. The order test proves that this quantifies over all possible
+finite comparison groups. For a supplied pair only its own table
+comparison is needed. The overall running time is
+$L^{O(1)}+p^{O((D+1)^3)}$ for fixed $p$. A polynomial overhead for
+single-tape simulation preserves this bound. Since $D\le L$, both
+decision problems have deterministic exponential-time algorithms.
+\end{proof}
+
+Together with the polynomial-time reductions of Section~\ref{sec:reduction},
+Proposition~\ref{hu:membership} proves Theorem~\ref{thm:main}.
+
+\appendix
+
+\section{Compiling a bounded machine into address schemas}
+\label{app:compiler}
+An addressed circuit with $r$ bits has one gate $(g,a)$ for each
+gate type $g$ and $a\in\{0,1\}^r$. A connection schema specifies
+two types, a target input port, a nonempty product of subsets of
+$\{0,1\}$ as its source domain, and one bit permutation per coordinate.
+It joins each address in the domain to its image. A scalar gate is
+the OR of its seeds and inputs. An AND gate is true when each of its two
+ports has a true incoming gate. Seeds and output tests specify a scalar
+type and a product domain. The circuit accepts if a tested gate is true.
+
+\begin{lemma}
+\label{lem:machine-schemas}
+For each deterministic one-tape exponential-time decider $M$ there is a
+polynomial-time transducer that, on input $w$, writes an acyclic
+addressed circuit accepting exactly when $M$ accepts $w$. The number
+$r$ of address bits is polynomial in $|w|$ and may be taken at least
+$32$. The number of gate types is constant for fixed $M$, the number of
+connection schemas is $O(r^2)$, and the total description length is
+$O(r^3)$.
+\end{lemma}
+\begin{proof}
+Fix integers $c,e$ such that $M$ halts on length-$m$ inputs within
+$2^{c(m+1)^e}$ steps. Increasing $c$ if necessary, put
+\[
+ d=c(m+1)^e+(m+1)+2,\qquad T=2^{d-2},\qquad N=2^d,\qquad r=2d\ge32 .
+\]
+The bound $T$ covers both the running time and $m+1$.
+Use a circle of $N$ tape cells and rows $t=0,\ldots,N-1$. A letter
+consists of the tape symbol and either no head or the control of the
+head. The alphabet $\Gamma$ is fixed. In a legal row the center letter
+at the next time is a function $f$ of the three neighboring letters.
+The old head writes the prescribed symbol, and the move determines the
+only new head. A halted head stays in place and preserves its symbol.
+Extend $f$ arbitrarily to triples incompatible with a legal row.
+Initialize the circle with the input in cells $0,\ldots,m-1$,
+blanks elsewhere and the initial head at zero. Until the halt time
+the head is in $[-T,T]$, which embeds injectively in the circle and
+contains the written input. The initial contents agree on that interval.
+Induction on the number of executed moves gives the same symbol read,
+transition, write and next head position as on the integer tape.
+After the halt the entire legal row is fixed. Thus the last row
+contains an accepting head exactly when $M$ accepts.
+
+Use $d$ bits for $t$ and $d$ bits for the spatial index $x\bmod N$.
+For each letter $a$ use one scalar type $S_a$. For each
+$(a,b,c')\in\Gamma^3$ use two AND types $P_{abc'}$ and $U_{abc'}$.
+At $(t+1,x)$ the inputs to $P_{abc'}$ are
+$S_a(t,x-1)$ and $S_b(t,x)$ on different ports.
+At the same address the inputs to $U_{abc'}$ are $P_{abc'}(t+1,x)$
+and $S_{c'}(t,x+1)$ on different ports.
+For every address join $U_{abc'}$ to $S_{f(a,b,c')}$ there.
+The same-address wire from $P$ to $U$ is also present in row zero.
+The $P$ gates in that row have no inputs from an earlier row.
+Seed precisely the scalar letter prescribed at time zero.
+Give $P,U,S$ in row $t$ ranks $3t,3t+1,3t+2$, respectively.
+Every wire increases rank. Induction in this order shows that exactly
+one scalar letter is true at each address, namely the corresponding
+letter in the cellular tableau. At positive times exactly the triple
+of letters in the preceding neighborhood reaches its $U$ gate.
+Tests inspect all scalar types carrying an accepting head at time
+$N-1$ and arbitrary $x$.
+
+To encode a nonwrapping increment on $d$ bits, take one case for each
+possible least zero bit $j$. Fix all bits below $j$ to one and bit $j$
+to zero, and flip bits $0,\ldots,j$. Every case is a product domain.
+For a cyclic spatial increment also allow the all-ones string and
+flip all bits. Decrement uses the reversed bit conditions.
+The two halves of the address are disjoint, so a simultaneous
+time and spatial shift uses the products of their cases. For each
+triple this gives $d(d+1)$ schemas for the left input, $d$ for the
+center, $d(d+1)$ for the right, and two for the same-address wires.
+Omitting the time wrap prevents any input from the final row to the
+initial row.
+
+For the seeds, write individual requests for positions $0,\ldots,m$
+in the initial row. This handles an empty input and the head at zero.
+The remaining blank positions form the interval $[m+1,N-1]$.
+Use the singleton $m+1$ and, for each zero bit of $m+1$, the product
+domain where the higher bits agree with $m+1$, that bit is one,
+and lower bits are free. The highest differing bit proves that these
+products cover the interval exactly. The compiler can enumerate all
+gates, triples, pairs of carry positions, and address bits with fixed
+nested loops. It computes the polynomial integer $d$ and the $d$-bit
+word for $m+1$. It never enumerates $N$ positions or $N$ times.
+Since $m<d$, there are $O(r)$ seed and test requests and $O(r^2)$
+connections, each with $O(r)$ bits of coordinate data.
+Unary delimited record counts also have polynomial length.
+All loops and all work strings have polynomial bounds, so the
+description is computable in polynomial time. A one-tape transducer
+can perform the same operations by scanning its polynomially bounded
+work area for each simulated operation.
+\end{proof}
+
+The later cyclic layout needs $r\ge3$, equivalently $r=n+3$ with
+$n\ge0$. Here $n=2d-3$. No addresses need to be appended to the
+compiled circuit. In the identification reduction we apply the lemma
+to a machine for the source language. For the equivalence reduction we
+interchange its two halting answers before compilation, since the
+constructed pair is equivalent precisely on rejection.
+
+\section{Refinement and the three versions}
+\label{app:games}
+
+Call two tuples \emph{matched} if their colors agree at every round for
+the joint update of Section~\ref{sec:statement}. Write $a[i/x]$ for a
+coordinate replacement. For matched tuples $a,b$ there is a single
+bijection $f$ between the underlying sets such that
+$a[i/x]$ matches $b[i/f(x)]$ for every $i,x$. Indeed at any given round
+the replacement vectors have matching multiplicities. Pair within their
+fibers. The sets of admissible bijections for successive rounds are
+nested nonempty finite sets. Their intersection supplies $f$.
+Similarly, equality of histograms at all rounds supplies a matching
+tuple for any prescribed tuple in the histogram. Conversely one pair
+of matched tuples gives a bijection between the full tuple sets
+preserving stable colors: replace their coordinates in order using the
+announced bijection conditional on the preceding choices. Each such
+conditional map is bijective, so the induced map on sequences is
+bijective. The same argument applies on a subset when each successive
+bijection carries that subset onto its counterpart.
+
+\begin{lemma}[The Version-II game]\label{lem:paper-wl-game}
+For $d\ge1$, Version-II equivalence is equivalent to a winning
+Duplicator strategy, from the empty position, with $d+1$ pebble pairs.
+On each move Spoiler picks up one pair (possibly unused), the remaining
+marks must induce an isomorphism of their generated subgroups, Duplicator
+announces a bijection, and Spoiler places the pair at an element and
+its image or chooses the image and uses its preimage.
+A winning position with $m+1$ pairs preserves every counting formula
+on its marked parameters that uses at most $m$ variable names, with
+relations between group words as atomic formulas.
+\end{lemma}
+\begin{proof}
+Assume the histograms agree. The all-identity tuples match, since
+their initial word type forces each entry of a matching tuple to be the
+identity. Begin with $d+1$ virtual identity pairs. Maintain that deleting
+any one pair gives matching $d$-tuples in corresponding order.
+When pair $i$ is removed its complement matches, so the subgroup test
+passes. Apply the replacement bijection of that complement. After
+placement, omitting $i$ still gives the old complement. Omitting any
+other pair gives a coordinate replacement of the old complement up to
+a common reordering. A common coordinate permutation preserves matching,
+by induction on rounds. Ignoring initially unused virtual marks gives a
+strategy on the empty board.
+
+Conversely, take any winning position containing $d$ designated pairs.
+Their $d$-tuples have equal colors at every round. At round zero lift
+the remaining pair and apply the subgroup test. For the induction step,
+lift that same pair. Its announced bijection matches all replacement
+vectors: after placing $x$, designate the new pair in place of the old
+$i$th pair and use the induction hypothesis, independently for each
+$i$. Starting from the empty board, fill $d$ designated pairs in
+order. The resulting conditional bijections match the multiplicities
+of all tuples. For the last assertion, reserve the extra pair for
+testing atoms after pickup. At a counting quantifier move the pair of
+the rebound variable. The announced bijection pairs the satisfying
+values by induction on the subformula. Negation and conjunction
+preserve the assertion. Any marks unrelated to the free variables
+can be ignored by maintaining them as virtual marks. Unused variable
+names can then be assigned with free pairs.
+\end{proof}
+
+\begin{lemma}[Changes of version]\label{lem:version-comparisons}
+For finite groups, the following implications hold:
+\begin{align*}
+ G\equiv^{II}_d H&\ \Longrightarrow\ G\equiv^{I}_k H
+     &&(d\ge k\ge1),\\
+ G\equiv^{I}_d H&\ \Longrightarrow\ G\equiv^{II}_k H
+     &&(d\ge k+2,\ k\ge1),\\
+ G\equiv^{I}_d H&\ \Longrightarrow\ G\equiv^{III}_k H
+     &&(d\ge2k+1,\ k\ge2),\\
+ G\equiv^{III}_d H&\ \Longrightarrow\ G\equiv^{II}_k H
+     &&(d\ge\lceil k/2\rceil+2,\ k\ge1).
+\end{align*}
+Version-II equivalence is also monotone downwards in dimension.
+\end{lemma}
+\begin{proof}
+For the first two implications designate $k$ entries of matching
+$d$-tuples. In the first case their Version-I initial colors agree,
+because equality and multiplication are word tests. In the second
+case all word tests on these entries can be performed with two spare
+variable names $s,t$ in the multiplication relation. For a signed word
+$L$, test $s=L$ as follows. For the empty word test $s^2=s$. For
+$L=x_iL'$ quantify $t$ with $x_it=s$ and recursively test $t=L'$,
+reusing $s$ as the spare name. For $L=x_i^{-1}L'$ use $x_is=t$
+instead. To test $L=1$, first quantify $s$ with $s^2=s$. Matching
+Version-I tuples satisfy the same such formulas: the atomic tests are
+in the initial color and each quantified witness is transported by the
+replacement bijection. In either case, induction on the output round
+now gives equal colors on the designated entries, since one announced
+bijection handles every designated replacement. Obtain their full
+histograms by filling those entries in order. The same argument with
+Version II on both sides proves its monotonicity.
+
+For the third implication write $P_j(x,y)$ for the private vertex in
+position $j=0,1,2,3$ of the path for $(x,y)$. Represent each graph
+vertex by two distinct group slots and a tag. The group tag reads
+only the first slot, and tag $j$ reads $P_j(x,y)$ from both. Reserve
+one additional group slot. Matched Version-I tuples with identical
+tags induce equal initial graph colors: attachments to a group vertex
+$z$ test respectively $z=x$, $z=y$, or $xy=z$. Private edges test
+equality of the ordered pair and consecutiveness of the tags.
+We show by induction that the induced graph tuples have equal colors
+at every round. Choose the matching bijection $f$ for the spare slot.
+After placing $x,f(x)$ there choose the matching bijection $f_x$ of
+the resulting tuples. Announce the graph bijection
+\[
+ x\longmapsto f(x),\qquad
+ P_j(x,y)\longmapsto P_j\bigl(f(x),f_x(y)\bigr).
+\]
+For replacement at graph position $i$, overwrite its old first slot
+with $y$ using $f_x$. Use the former spare and that slot as the new
+pair, and the old second slot as the new spare. For a group vertex the
+second slot can hold any matched value. All other representations
+remain in place. The induction hypothesis gives the required previous
+color in every component of the replacement vector. To start the
+histogram, take matching group tuples of dimension $d$, choose group
+tags throughout and fill the $k$ first slots in order. This matches
+all group-vertex tuples, as required for Version III.
+
+For the fourth implication equality of the restricted histograms gives
+$|G|^d=|H|^d$. The common order one case is immediate, so suppose it
+is at least two. The five sorts in the graph are visible to matching
+$d$-tuples. Group vertices have degree $3|G|>3$, $P_1$ has degree
+three and the three other sorts have degree two. Among those three,
+$P_2$ has no group neighbor, while $P_0$ has both a group neighbor and
+a degree-three neighbor and $P_3$ has only the former. Degree and
+existence of a neighbor of any recognized sort are preserved by stable
+matching: keep the tested vertex and use a different slot to count or
+choose neighbors under its matching bijection.
+
+From $P_1(x,y)$ one can read the three coordinates $x,y,xy$ by
+following respectively the sort sequences $(0,\mathrm{group})$,
+$(\mathrm{group})$, and $(2,3,\mathrm{group})$. The group vertex $x$
+itself may serve as a degenerate representation with all three
+coordinates equal to $x$. Equality between two such implicit
+coordinates of marked positions is preserved by matching tuples.
+Indeed it is a composition of the first typed path with the reverse of
+the other, with the zero-length group branch for a degenerate
+representation. Any such binary relation built by composition,
+intersection, union and reversal from equality, adjacency and sort
+tests is preserved using three names. For composition retain the two
+endpoints, choose an intermediate vertex with the third name, and
+apply induction to the two subrelations. Names no longer free in a
+subrelation may be rebound there. Here $d\ge3$.
+
+Pack the $k$ group entries in consecutive pairs of implicit inputs
+of $\lceil k/2\rceil$ graph positions, leaving the last second input
+unused if $k$ is odd. The two remaining graph names suffice to test
+any word in the packed entries. In detail, an output coordinate $s$
+represents the empty word precisely when it is the identity. Identity
+can itself be tested by equality to an input of a $P_1$ whose three
+coordinates coincide, since $a^2=a$ forces $a=1$. This test is a
+binary-relation composition and uses only three names locally. To
+test $s=x_i L'$ introduce a helper $P_1(x_i,t)$, require its first
+input to equal the indicated packed coordinate, its product to equal
+$s$, and recursively test its second input $t=L'$. To test
+$s=x_i^{-1}L'$ use the helper with second input $s$ and recursively
+test its product against $L'$. After either step the former output
+name is free for recursion. To start, bind one of the two names to
+the identity group vertex as output. This is a formula in the $d$
+graph names: the three-name tests of implicit coordinate equality are
+separate subformulas and may shadow names not free in that test.
+Induction on the word proves the stated semantics. Stable matching
+therefore gives the same Version-II initial color to the packed group
+tuples.
+
+For a refinement step use the first spare graph position to choose a
+new group element $x$. The announced graph bijection restricts to a
+bijection $f:G\to H$ because its images preserve sorts after
+placement. For a replacement at group coordinate $i$ let $u$ be the
+other implicit input of its packed position. Use the second spare
+position to mark $P_1(x,u)$ or $P_1(u,x)$ in the appropriate order.
+On the other graph its mate must be the corresponding unique $P_1$
+with the matched inputs, by the coordinate-equality tests against the
+retained positions. Use this new position in the packing and release
+the old position. The resulting packed tuples retain every other coordinate. Their
+values at the designated coordinate become $x$ and $f(x)$. The bijection $f$ was chosen before $i$, so
+the same $f$ matches the whole replacement vector. Induction on rounds
+gives stable Version-II matching of all represented tuples. Finally
+choose any matching pair of group-only $d$-tuples from the restricted
+histograms and initially use their entries as degenerate
+representations. One resulting pair of matched $k$-tuples gives equal
+Version-II histograms by sequential replacement, as above.
+\end{proof}
+
+\begingroup
+\small
+\begin{thebibliography}{9}
+\setlength{\itemsep}{3pt}
+\setlength{\parskip}{0pt}
+
+\bibitem{BS2020}
+Jendrik Brachter and Pascal Schweitzer.
+\emph{On the Weisfeiler--Leman Dimension of Finite Groups}.
+Proceedings of LICS 2020, pp.\ 287--300. Full version,
+arXiv:2003.13745v2, 2021.
+\url{https://arxiv.org/abs/2003.13745}.
+
+\bibitem{OpenAI2026}
+OpenAI.
+\emph{The complexity of identifying a graph by Weisfeiler--Leman refinement}.
+Manuscript, 25 September 2026.
+\href{https://github.com/openai/math/tree/fd4aeeb2ee4fc729c18d98444fed42fd0529eeeb/preprints/The-complexity-of-identifying-a-graph-by-Weisfeiler-Leman-refinement-September-25-2026}{Official manuscript and source}.
+
+\end{thebibliography}
+\endgroup
+\end{document}
